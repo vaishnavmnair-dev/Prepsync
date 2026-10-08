@@ -59,7 +59,7 @@ Below are the raw survey response charts generated directly from the student res
 * **75.0%** of surveyed students are actively preparing.
 * **87.5%** admitted they **do not have a clear daily plan**, proving that lack of execution structure is a near-universal struggle.
 
-![Placement Status and Daily Planning Gap](student-survey-evidence/evidence/Screenshot%202026-10-08%20221912.png)
+![Placement Status and Daily Planning Gap](Screenshot%202026-10-08%20221912.png)
 
 ---
 
@@ -67,7 +67,7 @@ Below are the raw survey response charts generated directly from the student res
 * **75.0%** find it hard to know which specific technical topics they need to improve.
 * **Time Management (37.5%)** and **Coding / Guidance (50.0% combined)** represent the overwhelming majority of daily preparation friction.
 
-![Skill Blindspots and Top Problems](student-survey-evidence/evidence/Screenshot%202026-10-08%20221953.png)
+![Skill Blindspots and Top Problems](Screenshot%202026-10-08%20221953.png)
 
 ---
 
@@ -76,14 +76,14 @@ Below are the raw survey response charts generated directly from the student res
 * **87.5%** experience decision paralysis because of resource overload.
 * **75.0%** confirmed they would immediately use a tool combining skill gap analysis and daily adaptive planning.
 
-![Resource Overload and Demand for Solution](student-survey-evidence/evidence/Screenshot%202026-10-08%20222028.png)
+![Resource Overload and Demand for Solution](Screenshot%202026-10-08%20222028.png)
 
 ---
 
 ### 📊 Exhibit D: Usefulness Rating Distribution
 * Half of all respondents (**50%**) rated the proposed solution **5 out of 5 stars** for usefulness.
 
-![Tool Usefulness Rating](student-survey-evidence/evidence/Screenshot%202026-10-08%20222056.png)
+![Tool Usefulness Rating](Screenshot%202026-10-08%20222056.png)
 
 ---
 

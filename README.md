@@ -30,7 +30,7 @@ Engineering and college students (across years 2, 3, and 4) preparing for summer
 
 To validate that this struggle is widespread and pressing, we conducted a primary user survey and structured interviews with **8 college students** actively preparing for internships and campus placements.
 
-The complete survey breakdown and qualitative interview transcripts are documented in [`evidence/survey_results.md`](evidence/survey_results.md).
+The complete survey breakdown, qualitative interview transcripts, and Google Forms chart exhibits are documented in [`evidence/README.md`](evidence/README.md).
 
 ### Key Survey Findings (Real Numbers)
 
