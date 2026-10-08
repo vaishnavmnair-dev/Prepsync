@@ -1,0 +1,3692 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Prepsync - Realistic Student Study Planner</title>
+
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Google Fonts: Inter & JetBrains Mono -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap"
+      rel="stylesheet"
+    />
+
+    <!-- Lucide Icons CDN -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <style>
+      body {
+        font-family: "Inter", sans-serif;
+      }
+      .font-mono {
+        font-family: "JetBrains Mono", monospace;
+      }
+      /* Smooth custom scrollbars */
+      ::-webkit-scrollbar {
+        width: 6px;
+        height: 6px;
+      }
+      ::-webkit-scrollbar-track {
+        background: #f1f5f9;
+      }
+      ::-webkit-scrollbar-thumb {
+        background: #cbd5e1;
+        border-radius: 9999px;
+      }
+      ::-webkit-scrollbar-thumb:hover {
+        background: #94a3b8;
+      }
+      .phone-notch {
+        width: 110px;
+        height: 22px;
+        background: #0f172a;
+        border-radius: 9999px;
+      }
+      .phone-frame-active {
+        max-width: 420px !important;
+        border: 12px solid #0f172a !important;
+        border-radius: 48px !important;
+        box-shadow: 0 25px 50px -12px rgba(15, 23, 42, 0.45) !important;
+        background-color: #ffffff !important;
+        overflow: hidden !important;
+        ring: 4px solid rgba(203, 213, 225, 0.6) !important;
+      }
+      @keyframes subtlePulse {
+        0%,
+        100% {
+          opacity: 1;
+          transform: scale(1);
+        }
+        50% {
+          opacity: 0.85;
+          transform: scale(1.02);
+        }
+      }
+      .pulse-subtle {
+        animation: subtlePulse 2.5s infinite ease-in-out;
+      }
+    </style>
+  </head>
+  <body
+    class="bg-gradient-to-br from-slate-50 via-indigo-50/20 to-sky-50/20 text-slate-900 min-h-screen flex flex-col items-center p-3 sm:p-6 pb-20 select-none"
+  >
+    <!-- Header -->
+    <header
+      class="w-full max-w-4xl mb-4 flex flex-wrap items-center justify-between gap-3 p-4 rounded-2xl bg-white border border-slate-200/80 shadow-sm"
+    >
+      <div class="flex items-center gap-3">
+        <div
+          class="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 to-blue-600 flex items-center justify-center text-white shadow-md shadow-indigo-600/20"
+        >
+          <i data-lucide="zap" class="w-5 h-5 fill-white"></i>
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <h1 class="text-sm font-extrabold text-slate-900 tracking-tight">
+              Prepsync
+            </h1>
+            <span
+              class="text-[10px] px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-700 font-bold border border-indigo-200 uppercase tracking-wider"
+            >
+              AI Planner
+            </span>
+            <span
+              id="backendStatusIndicator"
+              class="text-[10px] px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 font-semibold border border-emerald-200 flex items-center gap-1"
+            >
+              <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+              <span>Online</span>
+            </span>
+          </div>
+          <p class="text-[11px] text-slate-500 font-medium">
+            Empathetic &amp; Realistic Student Schedule
+          </p>
+        </div>
+      </div>
+
+      <!-- User Auth status & Mobile switch -->
+      <div class="flex items-center gap-2">
+        <div id="userHeaderSlot" class="flex items-center">
+          <!-- Injected via JS based on auth state -->
+        </div>
+
+        <button
+          id="toggleMobileFrameBtn"
+          onclick="toggleMobileFrame()"
+          class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 border border-slate-200 text-slate-700 text-xs font-semibold transition"
+        >
+          <i id="frameIcon" data-lucide="smartphone" class="w-3.5 h-3.5"></i>
+          <span id="frameLabel">Phone Preview</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- Desktop Dock Navigation -->
+    <div
+      id="desktopDockContainer"
+      class="w-full max-w-4xl mb-6 flex justify-center"
+    >
+      <nav
+        class="inline-flex items-center gap-1.5 p-1.5 rounded-2xl bg-white border border-slate-200/90 shadow-md shadow-slate-200/50"
+      >
+        <button
+          onclick="setTab('home')"
+          id="dock-home"
+          class="tab-btn flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all text-slate-600 hover:text-slate-900 hover:bg-slate-100"
+        >
+          <i data-lucide="home" class="w-4 h-4"></i>
+          <span>Home</span>
+        </button>
+
+        <button
+          onclick="setTab('hub')"
+          id="dock-hub"
+          class="tab-btn flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all bg-indigo-600 text-white shadow-md shadow-indigo-600/20"
+        >
+          <i data-lucide="layout-grid" class="w-4 h-4"></i>
+          <span>Dashboard</span>
+          <span
+            id="dockTaskBadge"
+            class="text-[10px] px-1.5 py-0.2 rounded-full font-bold bg-white/20 text-white"
+            >3</span
+          >
+        </button>
+
+        <button
+          onclick="setTab('timeline')"
+          id="dock-timeline"
+          class="tab-btn flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all text-slate-600 hover:text-slate-900 hover:bg-slate-100"
+        >
+          <i data-lucide="calendar" class="w-4 h-4"></i>
+          <span>Timetable</span>
+        </button>
+
+        <button
+          onclick="setTab('performance')"
+          id="dock-performance"
+          class="tab-btn flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all text-slate-600 hover:text-slate-900 hover:bg-slate-100"
+        >
+          <i data-lucide="bar-chart-3" class="w-4 h-4"></i>
+          <span>Velocity</span>
+        </button>
+
+        <div class="w-[1px] h-5 bg-slate-200 mx-1"></div>
+
+        <button
+          onclick="setTab('profile')"
+          id="dock-profile"
+          class="tab-btn flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all text-slate-600 hover:text-slate-900 hover:bg-slate-100"
+        >
+          <i data-lucide="user" class="w-4 h-4"></i>
+          <span>Profile</span>
+        </button>
+      </nav>
+    </div>
+
+    <!-- Main Workspace -->
+    <main id="mainWorkspace" class="w-full flex justify-center pb-8">
+      <div
+        id="deviceFrameWrapper"
+        class="w-full max-w-4xl transition-all duration-300"
+      >
+        <!-- Phone Bezel Header (visible only in phone frame) -->
+        <div
+          id="phoneTopBar"
+          class="hidden h-10 w-full pt-2 px-6 items-center justify-between text-xs font-semibold text-slate-500 bg-white border-b border-slate-100 z-20"
+        >
+          <span id="phoneClock">18:00</span>
+          <div class="phone-notch mx-auto"></div>
+          <div class="flex items-center gap-1.5 text-[10px]">
+            <span>5G</span>
+            <span
+              class="w-3.5 h-2 bg-emerald-600 rounded-sm inline-block"
+            ></span>
+          </div>
+        </div>
+
+        <!-- Main Scrollable Screen Content -->
+        <div id="contentScrollArea" class="w-full">
+          <!-- TAB 1: HOME -->
+          <section id="tab-home-view" class="tab-view hidden space-y-6">
+            <!-- Hero Banner -->
+            <div
+              class="relative overflow-hidden rounded-3xl bg-gradient-to-r from-indigo-600 via-indigo-700 to-blue-600 p-6 md:p-8 text-white shadow-xl shadow-indigo-600/15"
+            >
+              <div
+                class="relative z-10 flex flex-wrap items-center justify-between gap-6"
+              >
+                <div class="space-y-2 max-w-lg">
+                  <div
+                    class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/15 backdrop-blur-md text-xs font-semibold text-indigo-100"
+                  >
+                    <i
+                      data-lucide="sparkles"
+                      class="w-3.5 h-3.5 text-amber-300"
+                    ></i>
+                    <span>Smart Study Assistant</span>
+                  </div>
+                  <h2
+                    id="homeWelcomeHeading"
+                    class="text-2xl md:text-3xl font-extrabold tracking-tight"
+                  >
+                    Hey, Aarav! Ready to study?
+                  </h2>
+                  <p class="text-xs sm:text-sm text-indigo-100 leading-relaxed">
+                    We schedule your tough coding &amp; math topics first,
+                    followed by written files, with automatic 15-minute breaks
+                    so you never burn out.
+                  </p>
+                </div>
+
+                <div class="flex items-center gap-3">
+                  <div
+                    class="text-center px-4 py-3 rounded-2xl bg-white/10 backdrop-blur-md border border-white/20"
+                  >
+                    <div
+                      class="flex items-center justify-center gap-1 text-amber-300 font-extrabold text-2xl"
+                    >
+                      <i data-lucide="flame" class="w-6 h-6 fill-amber-300"></i>
+                      <span id="homeStreakBadge">12</span>
+                    </div>
+                    <span
+                      class="text-[11px] font-medium text-indigo-100 uppercase tracking-wider block mt-0.5"
+                      >Day Streak</span
+                    >
+                  </div>
+
+                  <div
+                    class="text-center px-4 py-3 rounded-2xl bg-white/10 backdrop-blur-md border border-white/20"
+                  >
+                    <span
+                      id="homeWindowBadge"
+                      class="font-extrabold text-base sm:text-lg text-white block"
+                    >
+                      6:00 PM - 11:00 PM
+                    </span>
+                    <span
+                      class="text-[11px] font-medium text-indigo-100 uppercase tracking-wider block mt-0.5"
+                      >Study Window</span
+                    >
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <!-- Focus Sprint Pomodoro Widget -->
+              <div
+                class="p-5 rounded-2xl bg-white border border-slate-200/80 shadow-sm flex flex-col justify-between"
+              >
+                <div>
+                  <div class="flex items-center justify-between mb-2">
+                    <span
+                      class="text-xs font-bold uppercase tracking-wider text-slate-500 flex items-center gap-1.5"
+                    >
+                      <i
+                        data-lucide="clock"
+                        class="w-4 h-4 text-indigo-600"
+                      ></i>
+                      Focus Sprint Timer
+                    </span>
+                    <span
+                      class="text-xs font-semibold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200"
+                    >
+                      25 Min Sprint
+                    </span>
+                  </div>
+                  <div class="text-center my-3">
+                    <div
+                      id="timerDisplay"
+                      class="text-4xl font-extrabold text-slate-900 font-mono tracking-tight"
+                    >
+                      25:00
+                    </div>
+                    <p class="text-xs text-slate-500 mt-1 font-medium">
+                      Keep your phone away during this session
+                    </p>
+                  </div>
+                </div>
+                <div class="flex items-center gap-2 pt-2">
+                  <button
+                    id="toggleTimerBtn"
+                    onclick="toggleTimer()"
+                    class="flex-1 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs flex items-center justify-center gap-1.5 transition shadow-sm"
+                  >
+                    <i
+                      id="timerBtnIcon"
+                      data-lucide="play"
+                      class="w-3.5 h-3.5 fill-white"
+                    ></i>
+                    <span id="timerBtnText">Start Focus</span>
+                  </button>
+                  <button
+                    id="resetTimerBtn"
+                    onclick="resetTimer()"
+                    class="p-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 transition"
+                    title="Reset"
+                  >
+                    <i data-lucide="rotate-ccw" class="w-4 h-4"></i>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Tonight's Target Card -->
+              <div
+                class="p-5 rounded-2xl bg-white border border-slate-200/80 shadow-sm flex flex-col justify-between"
+              >
+                <div>
+                  <div class="flex items-center justify-between mb-2">
+                    <span
+                      class="text-xs font-bold uppercase tracking-wider text-slate-500 flex items-center gap-1.5"
+                    >
+                      <i
+                        data-lucide="target"
+                        class="w-4 h-4 text-emerald-600"
+                      ></i>
+                      Tonight's Objective
+                    </span>
+                    <span
+                      class="text-xs font-semibold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-md"
+                      >Priority</span
+                    >
+                  </div>
+                  <h4
+                    id="homeObjectiveTitle"
+                    class="text-sm font-bold text-slate-900 leading-snug"
+                  >
+                    Finish High-Focus Coding &amp; Lab Records
+                  </h4>
+                  <p
+                    id="homeObjectiveDesc"
+                    class="text-xs text-slate-500 mt-1.5 leading-relaxed"
+                  >
+                    High-focus coding is placed at the start, with automatic
+                    relaxation breaks before late evening.
+                  </p>
+                </div>
+                <button
+                  onclick="setTab('timeline')"
+                  class="w-full mt-3 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold transition flex items-center justify-center gap-1.5"
+                >
+                  <span>See Step-by-Step Schedule</span>
+                  <i data-lucide="chevron-right" class="w-3.5 h-3.5"></i>
+                </button>
+              </div>
+
+              <!-- Burnout Prevention Badge Card -->
+              <div
+                class="p-5 rounded-2xl bg-gradient-to-br from-emerald-50 to-teal-50/50 border border-emerald-200/80 shadow-sm flex flex-col justify-between"
+              >
+                <div>
+                  <div class="flex items-center justify-between mb-2">
+                    <span
+                      class="text-xs font-bold uppercase tracking-wider text-emerald-800 flex items-center gap-1.5"
+                    >
+                      <i
+                        data-lucide="shield-check"
+                        class="w-4 h-4 text-emerald-600"
+                      ></i>
+                      Rest Protection
+                    </span>
+                    <span
+                      class="text-[11px] font-bold px-2 py-0.5 rounded-full bg-emerald-600 text-white"
+                      >Active</span
+                    >
+                  </div>
+                  <p class="text-xs font-bold text-emerald-950">
+                    No Overworking Tonight
+                  </p>
+                  <p class="text-xs text-emerald-800 mt-1.5 leading-relaxed">
+                    We schedule automatic buffer periods so your eyes rest and
+                    memory retention stays sharp.
+                  </p>
+                </div>
+                <div
+                  class="pt-3 border-t border-emerald-200/60 flex items-center justify-between text-xs text-emerald-900 font-semibold"
+                >
+                  <span id="homeBufferLabel">Buffer Time: 30 mins</span>
+                  <span class="text-emerald-700">Healthy Pacing ✨</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Quick Task Preview Section -->
+            <div
+              class="p-6 rounded-2xl bg-white border border-slate-200/80 shadow-sm space-y-4"
+            >
+              <div class="flex items-center justify-between">
+                <div>
+                  <h3 class="text-sm font-bold text-slate-900">
+                    Your Tasks for Tonight
+                  </h3>
+                  <p class="text-xs text-slate-500">
+                    Click any task when you finish it
+                  </p>
+                </div>
+                <button
+                  onclick="setTab('hub')"
+                  class="text-xs font-bold text-indigo-600 hover:text-indigo-700 flex items-center gap-1"
+                >
+                  <span>Open Task Dashboard</span>
+                  <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i>
+                </button>
+              </div>
+              <div id="homeTaskListPreview" class="divide-y divide-slate-100">
+                <!-- Injected via JS -->
+              </div>
+            </div>
+          </section>
+
+          <!-- TAB 2: HUB / DASHBOARD -->
+          <section id="tab-hub-view" class="tab-view space-y-6">
+            <!-- Study Time Window -->
+            <div
+              class="p-5 rounded-2xl bg-white border border-slate-200/90 shadow-sm space-y-4"
+            >
+              <div class="flex flex-wrap items-center justify-between gap-3">
+                <div class="flex items-center gap-3">
+                  <div
+                    class="w-10 h-10 rounded-xl bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-600"
+                  >
+                    <i data-lucide="clock" class="w-5 h-5"></i>
+                  </div>
+                  <div>
+                    <h3
+                      class="text-xs font-extrabold uppercase tracking-wider text-slate-800 flex items-center gap-2"
+                    >
+                      <span>What are your study hours ?</span>
+                      <span
+                        id="windowTotalHoursBadge"
+                        class="text-[10px] px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 font-bold border border-emerald-200"
+                      >
+                        5.0 hour Total
+                      </span>
+                    </h3>
+                    <p class="text-xs text-slate-500 mt-0.5">
+                      Set your start and end time. AI will create your timetable
+                      within these hours.
+                    </p>
+                  </div>
+                </div>
+
+                <div
+                  class="flex items-center gap-2 text-xs font-bold text-slate-700"
+                >
+                  <span
+                    id="hubWindowDisplayStart"
+                    class="px-2.5 py-1 rounded-lg bg-slate-100 border border-slate-200"
+                    >6:00 PM</span
+                  >
+                  <span class="text-slate-400">to</span>
+                  <span
+                    id="hubWindowDisplayEnd"
+                    class="px-2.5 py-1 rounded-lg bg-slate-100 border border-slate-200"
+                    >11:00 PM</span
+                  >
+                </div>
+              </div>
+
+              <!-- Start & End Pickers -->
+              <div
+                class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 border-t border-slate-100"
+              >
+                <div
+                  class="flex items-center justify-between p-3 rounded-xl bg-slate-50 border border-slate-200"
+                >
+                  <div>
+                    <label
+                      for="inputStartTime"
+                      class="text-xs font-bold text-slate-700 block"
+                      >Start Time</label
+                    >
+                    <span class="text-[11px] text-slate-400"
+                      >Study Start Time</span
+                    >
+                  </div>
+                  <input
+                    id="inputStartTime"
+                    type="time"
+                    value="18:00"
+                    onchange="updateStudyWindow()"
+                    oninput="updateStudyWindow()"
+                    class="px-3 py-1.5 bg-white border border-slate-300 rounded-lg text-xs font-bold text-slate-800 shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  />
+                </div>
+
+                <div
+                  class="flex items-center justify-between p-3 rounded-xl bg-slate-50 border border-slate-200"
+                >
+                  <div>
+                    <label
+                      for="inputEndTime"
+                      class="text-xs font-bold text-slate-700 block"
+                      >End Time</label
+                    >
+                    <span class="text-[11px] text-slate-400"
+                      >Study End Time</span
+                    >
+                  </div>
+                  <input
+                    id="inputEndTime"
+                    type="time"
+                    value="23:00"
+                    onchange="updateStudyWindow()"
+                    oninput="updateStudyWindow()"
+                    class="px-3 py-1.5 bg-white border border-slate-300 rounded-lg text-xs font-bold text-slate-800 shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <!-- 4 Metric Cards -->
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3.5">
+              <div
+                class="p-4 rounded-2xl bg-white border border-slate-200/80 shadow-sm"
+              >
+                <div
+                  class="flex items-center justify-between text-indigo-600 mb-1"
+                >
+                  <span class="text-xs font-bold text-slate-500"
+                    >Hard Coding / Math</span
+                  >
+                  <i data-lucide="zap" class="w-4 h-4 text-indigo-600"></i>
+                </div>
+                <p
+                  id="metricHardCount"
+                  class="text-2xl font-extrabold text-slate-900"
+                >
+                  1
+                </p>
+                <span class="text-[11px] text-slate-500"
+                  >High focus needed</span
+                >
+              </div>
+
+              <div
+                class="p-4 rounded-2xl bg-white border border-slate-200/80 shadow-sm"
+              >
+                <div
+                  class="flex items-center justify-between text-amber-600 mb-1"
+                >
+                  <span class="text-xs font-bold text-slate-500"
+                    >Written Homework</span
+                  >
+                  <i data-lucide="book-open" class="w-4 h-4 text-amber-600"></i>
+                </div>
+                <p
+                  id="metricMediumCount"
+                  class="text-2xl font-extrabold text-slate-900"
+                >
+                  1
+                </p>
+                <span class="text-[11px] text-slate-500"
+                  >Lab reports &amp; files</span
+                >
+              </div>
+
+              <div
+                class="p-4 rounded-2xl bg-white border border-slate-200/80 shadow-sm"
+              >
+                <div
+                  class="flex items-center justify-between text-emerald-600 mb-1"
+                >
+                  <span class="text-xs font-bold text-slate-500"
+                    >Done Tonight</span
+                  >
+                  <i
+                    data-lucide="check-circle-2"
+                    class="w-4 h-4 text-emerald-600"
+                  ></i>
+                </div>
+                <p
+                  id="metricCompletedCount"
+                  class="text-2xl font-extrabold text-slate-900"
+                >
+                  1
+                </p>
+                <span class="text-[11px] text-slate-500">Finished tasks</span>
+              </div>
+
+              <div
+                class="p-4 rounded-2xl bg-white border border-slate-200/80 shadow-sm"
+              >
+                <div
+                  class="flex items-center justify-between text-rose-600 mb-1"
+                >
+                  <span class="text-xs font-bold text-slate-500"
+                    >Saved for Tomorrow</span
+                  >
+                  <i
+                    data-lucide="shield-check"
+                    class="w-4 h-4 text-rose-600"
+                  ></i>
+                </div>
+                <p
+                  id="metricDeferredCount"
+                  class="text-2xl font-extrabold text-slate-900"
+                >
+                  0
+                </p>
+                <span class="text-[11px] text-slate-500"
+                  >No overload guarantee</span
+                >
+              </div>
+            </div>
+
+            <!-- Task Input Card -->
+            <div
+              class="p-6 rounded-2xl bg-white border border-slate-200/80 shadow-sm space-y-4"
+            >
+              <div class="flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                  <span class="w-2.5 h-2.5 rounded-full bg-indigo-600"></span>
+                  <h3
+                    class="text-xs font-extrabold uppercase tracking-wider text-slate-800"
+                  >
+                    Add What You Need to Study
+                  </h3>
+                </div>
+                <span
+                  class="text-xs font-semibold px-2.5 py-1 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200 flex items-center gap-1.5"
+                >
+                  <i
+                    data-lucide="sparkles"
+                    class="w-3.5 h-3.5 text-indigo-600"
+                  ></i>
+                  Adaptive AI Helper
+                </span>
+              </div>
+
+              <form
+                id="taskInputForm"
+                onsubmit="handleAddTaskSubmit(event)"
+                class="space-y-3"
+              >
+                <textarea
+                  id="quickTaskText"
+                  rows="2"
+                  placeholder="Type or paste messy notes (e.g. Finish 2 C programs on pointers, submit Chemistry lab record, read 10 slides of DBMS)..."
+                  class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 text-xs placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white transition resize-none leading-relaxed"
+                ></textarea>
+
+                <div
+                  class="flex flex-wrap items-center justify-between gap-3 pt-1"
+                >
+                  <!-- Task Category Selector -->
+                  <div
+                    class="flex rounded-xl bg-slate-100 p-1 border border-slate-200"
+                  >
+                    <button
+                      type="button"
+                      onclick="setQuickType('hard')"
+                      id="typeBtn-hard"
+                      class="quick-type-btn px-3 py-1 rounded-lg text-xs font-semibold transition bg-white text-indigo-700 shadow-sm"
+                    >
+                      ⚡ Hard Coding / Math
+                    </button>
+                    <button
+                      type="button"
+                      onclick="setQuickType('medium')"
+                      id="typeBtn-medium"
+                      class="quick-type-btn px-3 py-1 rounded-lg text-xs font-semibold transition text-slate-600 hover:text-slate-900"
+                    >
+                      ✍️ Written Homework
+                    </button>
+                    <button
+                      type="button"
+                      onclick="setQuickType('light')"
+                      id="typeBtn-light"
+                      class="quick-type-btn px-3 py-1 rounded-lg text-xs font-semibold transition text-slate-600 hover:text-slate-900"
+                    >
+                      📖 Quick Revision
+                    </button>
+                  </div>
+
+                  <!-- Submit & AI Extract Buttons -->
+                  <div class="flex items-center gap-2">
+                    <button
+                      type="button"
+                      id="aiAutoExtractBtn"
+                      onclick="handleAiAutoExtract()"
+                      class="px-3.5 py-2 rounded-xl bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 text-indigo-700 text-xs font-bold transition flex items-center gap-1.5"
+                    >
+                      <i data-lucide="wand-2" class="w-3.5 h-3.5"></i>
+                      <span id="aiExtractLabel">AI Auto-Extract</span>
+                    </button>
+
+                    <button
+                      type="submit"
+                      class="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold transition shadow-sm"
+                    >
+                      Add Task
+                    </button>
+                  </div>
+                </div>
+              </form>
+
+              <!-- Generate Schedule Bar -->
+              <div
+                class="pt-3 border-t border-slate-100 flex flex-wrap items-center justify-between gap-3"
+              >
+                <p class="text-xs text-slate-500 flex items-center gap-1.5">
+                  <i
+                    data-lucide="shield-check"
+                    class="w-4 h-4 text-emerald-600"
+                  ></i>
+                  <span
+                    >We auto-insert a 15 min rest every hour so you don't burn
+                    out.</span
+                  >
+                </p>
+
+                <button
+                  id="generateScheduleBtn"
+                  onclick="handleGenerateSchedule()"
+                  class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-bold text-xs uppercase tracking-wider transition shadow-md shadow-emerald-600/15 flex items-center gap-2"
+                >
+                  <i data-lucide="sparkles" class="w-4 h-4"></i>
+                  <span id="generateScheduleLabel"
+                    >Generate Realistic Schedule</span
+                  >
+                </button>
+              </div>
+            </div>
+
+            <!-- Task Queue Section -->
+            <div class="space-y-3">
+              <div class="flex items-center justify-between px-1">
+                <h3
+                  id="queueHeader"
+                  class="text-xs font-extrabold uppercase tracking-wider text-slate-700"
+                >
+                  Study Queue (0 items)
+                </h3>
+                <div class="flex items-center gap-2">
+                  <button
+                    onclick="clearAllTasks()"
+                    class="text-[11px] font-semibold text-rose-500 hover:text-rose-700 px-2 py-1 rounded-lg hover:bg-rose-50 transition flex items-center gap-1"
+                    title="Clear all tasks from queue and database"
+                  >
+                    <i data-lucide="trash" class="w-3 h-3"></i>
+                    <span>Clear All</span>
+                  </button>
+                  <button
+                    onclick="syncWithBackend()"
+                    class="text-[11px] font-semibold text-slate-500 hover:text-indigo-600 px-2 py-1 rounded-lg hover:bg-slate-100 transition flex items-center gap-1"
+                    title="Sync with SQLite Database"
+                  >
+                    <i data-lucide="refresh-cw" class="w-3 h-3"></i>
+                    <span>Sync DB</span>
+                  </button>
+                  <button
+                    onclick="setTab('timeline')"
+                    class="text-xs font-bold text-indigo-600 hover:text-indigo-800 transition"
+                  >
+                    View Timetable →
+                  </button>
+                </div>
+              </div>
+              <div id="taskQueueList" class="space-y-2.5">
+                <!-- Injected via JS -->
+              </div>
+            </div>
+          </section>
+
+          <!-- TAB 3: TIMELINE -->
+          <section id="tab-timeline-view" class="tab-view hidden space-y-6">
+            <!-- Date Bar & Day Selector -->
+            <div
+              class="p-4 rounded-2xl bg-white border border-slate-200/80 shadow-sm flex flex-wrap items-center justify-between gap-3"
+            >
+              <div>
+                <span
+                  class="text-xs font-bold text-slate-400 uppercase tracking-wider block"
+                  >Tonight's Schedule</span
+                >
+                <p
+                  id="timelineDateHeader"
+                  class="text-sm font-extrabold text-slate-900"
+                >
+                  Thursday, 17 Oct • Relaxed Plan
+                </p>
+              </div>
+
+              <!-- Days Strip -->
+              <div id="weekDaysStrip" class="flex items-center gap-1.5">
+                <!-- Injected via JS -->
+              </div>
+            </div>
+
+            <!-- AI Coach Note -->
+            <div
+              id="aiAdviceBanner"
+              class="p-4 rounded-2xl bg-gradient-to-r from-indigo-50 to-blue-50 border border-indigo-200/80 shadow-sm relative"
+            >
+              <div class="flex items-center justify-between mb-1.5">
+                <span
+                  class="text-xs font-bold uppercase tracking-wider text-indigo-900 flex items-center gap-1.5"
+                >
+                  <i
+                    data-lucide="sparkles"
+                    class="w-3.5 h-3.5 text-indigo-600"
+                  ></i>
+                  Friendly Study Advice
+                </span>
+                <button
+                  onclick="dismissAiAdvice()"
+                  class="text-slate-400 hover:text-slate-600"
+                  title="Dismiss"
+                >
+                  <i data-lucide="x" class="w-4 h-4"></i>
+                </button>
+              </div>
+              <p
+                id="aiAdviceText"
+                class="text-xs text-indigo-950 leading-relaxed font-medium"
+              >
+                "Put your hardest coding or math task first while your brain is
+                fresh. Take a 15-minute break around 8 PM!"
+              </p>
+            </div>
+
+            <!-- Running Late Controls -->
+            <div
+              class="p-4 rounded-2xl bg-white border border-slate-200/80 shadow-sm flex flex-wrap items-center justify-between gap-3"
+            >
+              <div class="flex items-center gap-2">
+                <span
+                  id="lateOffsetDot"
+                  class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"
+                ></span>
+                <span
+                  id="lateOffsetStatus"
+                  class="text-xs text-slate-700 font-semibold"
+                >
+                  Schedule is on track!
+                </span>
+              </div>
+
+              <div class="flex items-center gap-2">
+                <button
+                  id="aiAdaptScheduleBtn"
+                  onclick="handleAdaptPlan('Cognitive Exhaustion / Fatigue')"
+                  class="px-3 py-1.5 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-700 border border-amber-200 text-xs font-bold transition flex items-center gap-1.5"
+                  title="Dynamic AI plan adaptation for cognitive fatigue or surprise assignments"
+                >
+                  <i data-lucide="zap" class="w-3.5 h-3.5"></i>
+                  <span>AI Adapt</span>
+                </button>
+                <button
+                  id="lateOffsetBtn"
+                  onclick="handleLateOffset()"
+                  class="px-3.5 py-1.5 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 text-xs font-bold transition flex items-center gap-1.5"
+                >
+                  <i data-lucide="clock" class="w-3.5 h-3.5"></i>
+                  <span id="lateOffsetBtnText">I'm 20m Late (+20 min)</span>
+                </button>
+                <button
+                  id="resetLateOffsetBtn"
+                  onclick="resetLateOffset()"
+                  class="hidden px-2.5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-bold transition"
+                  title="Reset offset"
+                >
+                  Reset
+                </button>
+              </div>
+            </div>
+
+            <!-- Dynamic Timeline Slots -->
+            <div id="timelineSlotsContainer" class="space-y-3 pl-1">
+              <!-- Injected via JS -->
+            </div>
+          </section>
+
+          <!-- TAB 4: PERFORMANCE -->
+          <section id="tab-performance-view" class="tab-view hidden space-y-6">
+            <div
+              class="flex items-center justify-between pb-3 border-b border-slate-200"
+            >
+              <div>
+                <span
+                  class="text-xs font-bold text-indigo-600 uppercase tracking-wider block"
+                  >Weekly Study Insights</span
+                >
+                <h2 class="text-xl font-extrabold text-slate-900 mt-0.5">
+                  Your Progress &amp; Consistency
+                </h2>
+              </div>
+              <span
+                class="text-xs font-bold px-3 py-1.5 rounded-xl bg-emerald-50 text-emerald-700 border border-emerald-200 flex items-center gap-1.5"
+              >
+                <i data-lucide="trending-up" class="w-4 h-4"></i>
+                <span>+22% Faster this week</span>
+              </span>
+            </div>
+
+            <!-- Metric Cards -->
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div
+                class="p-5 rounded-2xl bg-white border border-slate-200/80 shadow-sm space-y-2"
+              >
+                <span class="text-xs font-bold uppercase text-slate-500"
+                  >Focused Study Time</span
+                >
+                <div class="flex items-baseline gap-2">
+                  <span
+                    id="perfFocusHoursText"
+                    class="text-3xl font-extrabold text-slate-900"
+                    >18.5h</span
+                  >
+                  <span class="text-xs font-bold text-emerald-600"
+                    >Goal: 20h</span
+                  >
+                </div>
+                <div
+                  class="w-full h-2.5 bg-slate-100 rounded-full overflow-hidden"
+                >
+                  <div
+                    id="perfFocusHoursBar"
+                    class="h-full bg-indigo-600 rounded-full transition-all"
+                    style="width: 92%"
+                  ></div>
+                </div>
+                <p class="text-[11px] text-slate-500 font-medium">
+                  Weekly target progress
+                </p>
+              </div>
+
+              <div
+                class="p-5 rounded-2xl bg-white border border-slate-200/80 shadow-sm space-y-2"
+              >
+                <span class="text-xs font-bold uppercase text-slate-500"
+                  >Tasks Completed</span
+                >
+                <div class="flex items-baseline gap-2">
+                  <span
+                    id="perfTasksCompletedText"
+                    class="text-3xl font-extrabold text-slate-900"
+                    >24 / 28</span
+                  >
+                  <span
+                    id="perfTasksPercentageBadge"
+                    class="text-xs font-bold text-indigo-600"
+                    >86% Done</span
+                  >
+                </div>
+                <div
+                  class="w-full h-2.5 bg-slate-100 rounded-full overflow-hidden"
+                >
+                  <div
+                    id="perfTasksCompletedBar"
+                    class="h-full bg-emerald-600 rounded-full transition-all"
+                    style="width: 86%"
+                  ></div>
+                </div>
+                <p class="text-[11px] text-slate-500 font-medium">
+                  Consistent daily task execution
+                </p>
+              </div>
+
+              <div
+                class="p-5 rounded-2xl bg-white border border-slate-200/80 shadow-sm space-y-2"
+              >
+                <span class="text-xs font-bold uppercase text-slate-500"
+                  >Predicted Semester SGPA</span
+                >
+                <div class="flex items-baseline gap-2">
+                  <span
+                    id="perfSgpaText"
+                    class="text-3xl font-extrabold text-slate-900"
+                    >9.1</span
+                  >
+                  <span class="text-xs font-bold text-slate-400">/ 10</span>
+                </div>
+                <div
+                  class="w-full h-2.5 bg-slate-100 rounded-full overflow-hidden"
+                >
+                  <div
+                    id="perfSgpaBar"
+                    class="h-full bg-blue-500 rounded-full transition-all"
+                    style="width: 91%"
+                  ></div>
+                </div>
+                <p class="text-[11px] text-slate-500 font-medium">
+                  Based on your daily consistency
+                </p>
+              </div>
+            </div>
+
+            <!-- Charts Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <!-- Study Type Split -->
+              <div
+                class="p-5 rounded-2xl bg-white border border-slate-200/80 shadow-sm space-y-4"
+              >
+                <h3
+                  class="text-xs font-extrabold uppercase tracking-wider text-slate-700"
+                >
+                  What You Studied Most
+                </h3>
+                <div class="space-y-3">
+                  <div>
+                    <div class="flex justify-between text-xs font-bold mb-1">
+                      <span class="text-indigo-700"
+                        >⚡ Coding &amp; Math (Deep Work)</span
+                      >
+                      <span id="perfHardPercentText">55%</span>
+                    </div>
+                    <div
+                      class="w-full h-2.5 bg-slate-100 rounded-full overflow-hidden"
+                    >
+                      <div
+                        id="perfHardPercentBar"
+                        class="h-full bg-indigo-600 rounded-full transition-all"
+                        style="width: 55%"
+                      ></div>
+                    </div>
+                  </div>
+                  <div>
+                    <div class="flex justify-between text-xs font-bold mb-1">
+                      <span class="text-amber-700"
+                        >✍️ Lab Files &amp; Written Homework</span
+                      >
+                      <span id="perfMediumPercentText">30%</span>
+                    </div>
+                    <div
+                      class="w-full h-2.5 bg-slate-100 rounded-full overflow-hidden"
+                    >
+                      <div
+                        id="perfMediumPercentBar"
+                        class="h-full bg-amber-500 rounded-full transition-all"
+                        style="width: 30%"
+                      ></div>
+                    </div>
+                  </div>
+                  <div>
+                    <div class="flex justify-between text-xs font-bold mb-1">
+                      <span class="text-emerald-700"
+                        >📖 Slide Reading &amp; Revision</span
+                      >
+                      <span id="perfLightPercentText">15%</span>
+                    </div>
+                    <div
+                      class="w-full h-2.5 bg-slate-100 rounded-full overflow-hidden"
+                    >
+                      <div
+                        id="perfLightPercentBar"
+                        class="h-full bg-emerald-600 rounded-full transition-all"
+                        style="width: 15%"
+                      ></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Daily Hours Bar Chart -->
+              <div
+                class="p-5 rounded-2xl bg-white border border-slate-200/80 shadow-sm space-y-4"
+              >
+                <h3
+                  class="text-xs font-extrabold uppercase tracking-wider text-slate-700"
+                >
+                  Daily Hours Logged
+                </h3>
+                <div
+                  class="h-36 flex items-end justify-between gap-2 pt-4 px-2"
+                >
+                  <div
+                    onclick="
+                      showToast('Mon: 4.5 hours focused study logged 📘')
+                    "
+                    class="flex-1 flex flex-col items-center gap-2 h-full justify-end group cursor-pointer"
+                    title="Mon: 4.5h"
+                  >
+                    <span
+                      class="text-[10px] font-bold text-slate-600 group-hover:text-indigo-600"
+                      >4.5h</span
+                    >
+                    <div
+                      class="w-full max-w-[28px] rounded-t-lg bg-slate-200 group-hover:bg-indigo-400 transition"
+                      style="height: 64%"
+                    ></div>
+                    <span class="text-[10px] font-bold text-slate-400"
+                      >Mon</span
+                    >
+                  </div>
+                  <div
+                    onclick="
+                      showToast('Tue: 5.0 hours focused study logged 💻')
+                    "
+                    class="flex-1 flex flex-col items-center gap-2 h-full justify-end group cursor-pointer"
+                    title="Tue: 5.0h"
+                  >
+                    <span
+                      class="text-[10px] font-bold text-slate-600 group-hover:text-indigo-600"
+                      >5.0h</span
+                    >
+                    <div
+                      class="w-full max-w-[28px] rounded-t-lg bg-slate-200 group-hover:bg-indigo-400 transition"
+                      style="height: 71%"
+                    ></div>
+                    <span class="text-[10px] font-bold text-slate-400"
+                      >Tue</span
+                    >
+                  </div>
+                  <div
+                    onclick="
+                      showToast('Wed: 3.5 hours focused study logged ☕')
+                    "
+                    class="flex-1 flex flex-col items-center gap-2 h-full justify-end group cursor-pointer"
+                    title="Wed: 3.5h"
+                  >
+                    <span
+                      class="text-[10px] font-bold text-slate-600 group-hover:text-indigo-600"
+                      >3.5h</span
+                    >
+                    <div
+                      class="w-full max-w-[28px] rounded-t-lg bg-slate-200 group-hover:bg-indigo-400 transition"
+                      style="height: 50%"
+                    ></div>
+                    <span class="text-[10px] font-bold text-slate-400"
+                      >Wed</span
+                    >
+                  </div>
+                  <div
+                    onclick="
+                      showToast('Thu (Today): 4.8 hours active today! ⚡')
+                    "
+                    class="flex-1 flex flex-col items-center gap-2 h-full justify-end group cursor-pointer"
+                    title="Thu (Today): 4.8h"
+                  >
+                    <span
+                      class="text-[10px] font-bold text-indigo-600 font-extrabold"
+                      >4.8h</span
+                    >
+                    <div
+                      class="w-full max-w-[28px] rounded-t-lg bg-indigo-600 shadow-md shadow-indigo-600/30 transition"
+                      style="height: 68%"
+                    ></div>
+                    <span class="text-[10px] font-bold text-indigo-600"
+                      >Thu</span
+                    >
+                  </div>
+                  <div
+                    onclick="showToast('Fri: 4.0 hours scheduled 📑')"
+                    class="flex-1 flex flex-col items-center gap-2 h-full justify-end group cursor-pointer"
+                    title="Fri: 4.0h"
+                  >
+                    <span
+                      class="text-[10px] font-bold text-slate-600 group-hover:text-indigo-600"
+                      >4.0h</span
+                    >
+                    <div
+                      class="w-full max-w-[28px] rounded-t-lg bg-slate-200 group-hover:bg-indigo-400 transition"
+                      style="height: 57%"
+                    ></div>
+                    <span class="text-[10px] font-bold text-slate-400"
+                      >Fri</span
+                    >
+                  </div>
+                  <div
+                    onclick="showToast('Sat: 6.0 hours weekend deep sprint 🚀')"
+                    class="flex-1 flex flex-col items-center gap-2 h-full justify-end group cursor-pointer"
+                    title="Sat: 6.0h"
+                  >
+                    <span
+                      class="text-[10px] font-bold text-slate-600 group-hover:text-indigo-600"
+                      >6.0h</span
+                    >
+                    <div
+                      class="w-full max-w-[28px] rounded-t-lg bg-slate-200 group-hover:bg-indigo-400 transition"
+                      style="height: 85%"
+                    ></div>
+                    <span class="text-[10px] font-bold text-slate-400"
+                      >Sat</span
+                    >
+                  </div>
+                  <div
+                    onclick="
+                      showToast('Sun: 4.2 hours revision & buffer day ✨')
+                    "
+                    class="flex-1 flex flex-col items-center gap-2 h-full justify-end group cursor-pointer"
+                    title="Sun: 4.2h"
+                  >
+                    <span
+                      class="text-[10px] font-bold text-slate-600 group-hover:text-indigo-600"
+                      >4.2h</span
+                    >
+                    <div
+                      class="w-full max-w-[28px] rounded-t-lg bg-slate-200 group-hover:bg-indigo-400 transition"
+                      style="height: 60%"
+                    ></div>
+                    <span class="text-[10px] font-bold text-slate-400"
+                      >Sun</span
+                    >
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- TAB 5: PROFILE -->
+          <section
+            id="tab-profile-view"
+            class="tab-view hidden max-w-2xl mx-auto space-y-6"
+          >
+            <div
+              class="flex items-center justify-between pb-3 border-b border-slate-200"
+            >
+              <div>
+                <span
+                  class="text-xs font-bold text-indigo-600 uppercase tracking-wider block"
+                  >Student Account &amp; Schedule</span
+                >
+                <h2 class="text-xl font-extrabold text-slate-900 mt-0.5">
+                  Your Study Profile
+                </h2>
+              </div>
+              <div id="profileAuthActionSlot">
+                <!-- Login / Logout injected via JS -->
+              </div>
+            </div>
+
+            <div id="profileMainContent">
+              <!-- Injected via JS depending on logged in or guest state -->
+            </div>
+          </section>
+        </div>
+
+        <!-- Phone Bezel Bottom Navigation Bar (visible only in phone frame) -->
+        <div
+          id="phoneBottomBar"
+          class="hidden h-14 bg-white border-t border-slate-200 px-4 items-center justify-between z-20"
+        >
+          <button
+            onclick="setTab('home')"
+            class="phone-nav-btn p-2 text-slate-400"
+            id="pnav-home"
+            title="Home"
+          >
+            <i data-lucide="home" class="w-5 h-5"></i>
+          </button>
+          <button
+            onclick="setTab('hub')"
+            class="phone-nav-btn p-2 text-indigo-600 font-bold"
+            id="pnav-hub"
+            title="Dashboard"
+          >
+            <i data-lucide="layout-grid" class="w-5 h-5"></i>
+          </button>
+          <button
+            onclick="setTab('timeline')"
+            class="phone-nav-btn p-2 text-slate-400"
+            id="pnav-timeline"
+            title="Timetable"
+          >
+            <i data-lucide="calendar" class="w-5 h-5"></i>
+          </button>
+          <button
+            onclick="setTab('performance')"
+            class="phone-nav-btn p-2 text-slate-400"
+            id="pnav-performance"
+            title="Velocity"
+          >
+            <i data-lucide="bar-chart-3" class="w-5 h-5"></i>
+          </button>
+          <button
+            onclick="setTab('profile')"
+            class="phone-nav-btn p-2 text-slate-400"
+            id="pnav-profile"
+            title="Profile"
+          >
+            <i data-lucide="user" class="w-5 h-5"></i>
+          </button>
+        </div>
+      </div>
+    </main>
+
+    <!-- Auth Modal -->
+    <div
+      id="authModal"
+      class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm"
+    >
+      <div
+        class="w-full max-w-sm bg-white rounded-3xl p-6 shadow-2xl border border-slate-200 relative"
+      >
+        <button
+          onclick="closeAuthModal()"
+          class="absolute top-4 right-4 text-slate-400 hover:text-slate-600"
+          title="Close"
+        >
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+
+        <div class="text-center mb-6">
+          <div
+            class="w-10 h-10 rounded-xl bg-indigo-600 flex items-center justify-center text-white mx-auto shadow-md shadow-indigo-600/20 mb-2"
+          >
+            <i data-lucide="zap" class="w-5 h-5 fill-white"></i>
+          </div>
+          <h3 id="authModalTitle" class="text-lg font-extrabold text-slate-900">
+            Welcome Back
+          </h3>
+          <p id="authModalSubtitle" class="text-xs text-slate-500 mt-0.5">
+            Sign in to access your saved schedule
+          </p>
+        </div>
+
+        <div
+          id="authNotification"
+          class="hidden mb-4 p-2.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-semibold text-center"
+        ></div>
+
+        <form
+          id="authForm"
+          onsubmit="handleAuthSubmit(event)"
+          class="space-y-3.5"
+        >
+          <div id="authNameField" class="hidden">
+            <label class="text-xs font-bold text-slate-700 block mb-1"
+              >Your Name</label
+            >
+            <div class="relative">
+              <i
+                data-lucide="user"
+                class="w-4 h-4 text-slate-400 absolute left-3 top-2.5"
+              ></i>
+              <input
+                type="text"
+                id="authNameInput"
+                placeholder="e.g. Aarav Sharma"
+                class="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label class="text-xs font-bold text-slate-700 block mb-1"
+              >Email Address</label
+            >
+            <div class="relative">
+              <i
+                data-lucide="mail"
+                class="w-4 h-4 text-slate-400 absolute left-3 top-2.5"
+              ></i>
+              <input
+                type="email"
+                id="authEmailInput"
+                required
+                placeholder="aarav.sharma@college.edu"
+                value="aarav.sharma@college.edu"
+                class="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label class="text-xs font-bold text-slate-700 block mb-1"
+              >Password</label
+            >
+            <div class="relative">
+              <i
+                data-lucide="lock"
+                class="w-4 h-4 text-slate-400 absolute left-3 top-2.5"
+              ></i>
+              <input
+                type="password"
+                id="authPasswordInput"
+                required
+                placeholder="••••••••"
+                value="password123"
+                class="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              />
+            </div>
+          </div>
+
+          <button
+            type="submit"
+            id="authSubmitBtn"
+            class="w-full py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs uppercase tracking-wider shadow-md shadow-indigo-600/20 transition mt-2"
+          >
+            Sign In
+          </button>
+        </form>
+
+        <!-- Quick Demo Login -->
+        <div class="mt-4 pt-4 border-t border-slate-100 space-y-3">
+          <button
+            type="button"
+            id="authDemoBtn"
+            onclick="handleDemoLogin()"
+            class="w-full py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs transition"
+          >
+            ⚡ 1-Click Demo Student Sign In
+          </button>
+
+          <div class="text-center text-xs text-slate-500">
+            <span id="authTogglePrompt">New here? </span>
+            <button
+              id="authToggleModeBtn"
+              onclick="toggleAuthMode()"
+              class="font-bold text-indigo-600 hover:underline"
+            >
+              Create an account
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Task Breakdown Modal -->
+    <div
+      id="breakdownModal"
+      class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm"
+    >
+      <div
+        class="w-full max-w-md bg-white border border-slate-200 rounded-3xl p-6 shadow-2xl space-y-4"
+      >
+        <div
+          class="flex items-center justify-between pb-3 border-b border-slate-100"
+        >
+          <div class="flex items-center gap-2">
+            <i data-lucide="sparkles" class="w-4 h-4 text-indigo-600"></i>
+            <span
+              class="text-xs font-bold text-indigo-700 uppercase tracking-wider"
+              >Easy 5-Minute Steps</span
+            >
+          </div>
+          <button
+            onclick="closeBreakdownModal()"
+            class="text-slate-400 hover:text-slate-600"
+            title="Close"
+          >
+            <i data-lucide="x" class="w-4 h-4"></i>
+          </button>
+        </div>
+
+        <div>
+          <h3
+            id="breakdownModalTaskTitle"
+            class="text-sm font-bold text-slate-900"
+          >
+            Task Title
+          </h3>
+          <span id="breakdownModalTaskMeta" class="text-xs text-slate-500"
+            >Coding • 45 mins</span
+          >
+        </div>
+
+        <div
+          id="breakdownLoadingState"
+          class="py-8 flex flex-col items-center justify-center space-y-2"
+        >
+          <i
+            data-lucide="loader-2"
+            class="w-6 h-6 text-indigo-600 animate-spin"
+          ></i>
+          <p class="text-xs text-slate-600 font-medium">
+            Breaking this down into easy steps...
+          </p>
+        </div>
+
+        <div id="breakdownContentArea" class="hidden space-y-3.5">
+          <!-- Kickstart tip -->
+          <div
+            class="p-3.5 rounded-2xl bg-indigo-50 border border-indigo-200 flex items-start gap-2.5"
+          >
+            <i
+              data-lucide="lightbulb"
+              class="w-4 h-4 text-indigo-600 shrink-0 mt-0.5"
+            ></i>
+            <div>
+              <span
+                class="text-[11px] font-bold text-indigo-900 uppercase block"
+                >Instant Starter</span
+              >
+              <p
+                id="breakdownKickstartText"
+                class="text-xs text-indigo-950 font-medium leading-relaxed mt-0.5"
+              >
+                Just open your editor and write down the starter boilerplate.
+              </p>
+            </div>
+          </div>
+
+          <!-- Progress Tracker -->
+          <div class="space-y-1.5 pt-1">
+            <div class="flex items-center justify-between text-[11px] font-bold text-slate-500">
+              <span>Steps Progress</span>
+              <span id="breakdownProgressBadge" class="text-indigo-600">0 of 4 completed (0%)</span>
+            </div>
+            <div class="w-full bg-slate-100 rounded-full h-1.5 overflow-hidden">
+              <div id="breakdownProgressBar" class="bg-indigo-600 h-1.5 rounded-full transition-all duration-300" style="width: 0%"></div>
+            </div>
+          </div>
+
+          <!-- Step List -->
+          <div class="space-y-2">
+            <span
+              class="text-[11px] uppercase font-bold text-slate-400 block tracking-wider"
+              >Follow These Steps:</span
+            >
+            <div id="breakdownStepsList" class="space-y-2">
+              <!-- Injected via JS -->
+            </div>
+          </div>
+
+          <div class="pt-2 flex items-center gap-2">
+            <button
+              id="splitTaskBtn"
+              onclick="splitTaskIntoMicroSteps()"
+              class="flex-1 py-2.5 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 text-xs font-bold transition flex items-center justify-center gap-1.5"
+              title="Add each of these steps as smaller tasks in your study queue"
+            >
+              <i data-lucide="list-plus" class="w-4 h-4 text-indigo-600"></i>
+              <span>Add Steps to Queue</span>
+            </button>
+            <button
+              onclick="closeBreakdownModal()"
+              class="flex-1 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold transition shadow-sm"
+            >
+              Got It! Let's Start
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Toast Notification Bar -->
+    <div
+      id="toastNotification"
+      class="fixed bottom-6 right-6 z-50 transform translate-y-20 opacity-0 transition-all duration-300 px-4 py-2.5 rounded-xl bg-slate-900 text-white text-xs font-bold shadow-xl flex items-center gap-2"
+    >
+      <i data-lucide="check-circle-2" class="w-4 h-4 text-emerald-400"></i>
+      <span id="toastMessage">Done!</span>
+    </div>
+
+    <!-- Main JavaScript Engine -->
+    <script>
+      // --- Application State ---
+      const DEFAULT_USER = {
+        name: "Aarav Sharma",
+        email: "aarav.sharma@college.edu",
+        collegeId: "2024-CS-042",
+        avatar:
+          "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80",
+        track: "btech_cse",
+        goal: "Score 9.0+ SGPA & Build 3 Coding Projects",
+      };
+
+      const DEFAULT_TASKS = [];
+
+      // Load persisted state if available
+      function loadSavedState() {
+        try {
+          const token = localStorage.getItem("prepsync_token");
+          const saved = localStorage.getItem("prepsync_state_v1");
+          if (saved) {
+            const parsed = JSON.parse(saved);
+            const isLoggedIn = Boolean(token || parsed.token);
+            return {
+              ...parsed,
+              token: isLoggedIn ? (token || parsed.token) : null,
+              user: isLoggedIn ? parsed.user : null,
+              tasks: isLoggedIn && Array.isArray(parsed.tasks) ? parsed.tasks : [],
+              streak: isLoggedIn ? (parsed.streak || 0) : 0,
+              timerSeconds: 25 * 60,
+              isTimerRunning: false,
+              timerInterval: null,
+            };
+          }
+        } catch (e) {
+          console.error("Error loading saved state:", e);
+        }
+        return null;
+      }
+
+      const savedState = loadSavedState();
+
+      const STATE = savedState || {
+        activeTab: "hub",
+        isMobileFrame: false,
+        selectedDayIndex: 3,
+        streak: 0,
+        user: null,
+        token: localStorage.getItem("prepsync_token") || null,
+        backendConnected: false,
+        dailyPlan: null,
+        aiReadiness: null,
+        aiSynergies: null,
+        aiRoadmap: null,
+        studyWindow: {
+          start: "18:00",
+          end: "23:00",
+        },
+        tasks: [],
+        quickType: "hard",
+        timerSeconds: 25 * 60,
+        isTimerRunning: false,
+        timerInterval: null,
+        lateOffset: 0,
+        aiAdvice:
+          "Put your hardest coding or math task first while your brain is fresh. Take a 15-minute break around 8 PM!",
+        authMode: "signin",
+        weekDays: [
+          { day: "Mon", date: "14" },
+          { day: "Tue", date: "15" },
+          { day: "Wed", date: "16" },
+          { day: "Thu", date: "17" },
+          { day: "Fri", date: "18" },
+          { day: "Sat", date: "19" },
+          { day: "Sun", date: "20" },
+        ],
+      };
+
+      function persistState() {
+        try {
+          const toSave = {
+            activeTab: STATE.activeTab,
+            isMobileFrame: STATE.isMobileFrame,
+            selectedDayIndex: STATE.selectedDayIndex,
+            streak: STATE.streak,
+            user: STATE.user,
+            token: STATE.token,
+            studyWindow: STATE.studyWindow,
+            tasks: STATE.tasks,
+            quickType: STATE.quickType,
+            lateOffset: STATE.lateOffset,
+            aiAdvice: STATE.aiAdvice,
+            weekDays: STATE.weekDays,
+          };
+          localStorage.setItem("prepsync_state_v1", JSON.stringify(toSave));
+          if (STATE.token) {
+            localStorage.setItem("prepsync_token", STATE.token);
+          } else {
+            localStorage.removeItem("prepsync_token");
+          }
+        } catch (e) {
+          console.error("Error persisting state:", e);
+        }
+      }
+
+      const STUDY_TRACKS = [
+        {
+          id: "btech_cse",
+          title: "Computer Science (B.Tech)",
+          sub: "Coding, OS & Math",
+        },
+        {
+          id: "core_eng",
+          title: "Core Engineering",
+          sub: "Numericals & Lab Files",
+        },
+        {
+          id: "placements",
+          title: "Job Placements & Internships",
+          sub: "Aptitude & DSA Practice",
+        },
+        {
+          id: "exam_prep",
+          title: "Govt / Master Entrance (GATE)",
+          sub: "Theory & Previous Papers",
+        },
+      ];
+
+      // Audio chime generator using Web Audio API
+      let chimeAudioCtx = null;
+      function playChime() {
+        try {
+          const AudioCtx = window.AudioContext || window.webkitAudioContext;
+          if (!AudioCtx) return;
+          if (!chimeAudioCtx) chimeAudioCtx = new AudioCtx();
+          const now = chimeAudioCtx.currentTime;
+          const osc = chimeAudioCtx.createOscillator();
+          const gain = chimeAudioCtx.createGain();
+          osc.type = "sine";
+          osc.frequency.setValueAtTime(587.33, now); // D5
+          osc.frequency.setValueAtTime(880.0, now + 0.15); // A5
+          gain.gain.setValueAtTime(0.2, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.6);
+          osc.connect(gain);
+          gain.connect(chimeAudioCtx.destination);
+          osc.start(now);
+          osc.stop(now + 0.6);
+        } catch (e) {
+          console.warn("Audio chime unsupported or blocked:", e);
+        }
+      }
+
+      const BACKEND_BASE =
+        (typeof localStorage !== "undefined" && localStorage.getItem("prepsync_backend_url")) ||
+        (typeof window !== "undefined" && window.location && (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1" || window.location.protocol === "file:")
+          ? "http://127.0.0.1:8000"
+          : (typeof window === "undefined" ? "http://127.0.0.1:8000" : ""));
+
+      // Universal API Caller connecting Frontend to Backend and SQLite Database
+      async function apiCall(endpoint, method = "GET", body = null) {
+        if (!BACKEND_BASE) return null;
+        try {
+          const headers = { "Content-Type": "application/json" };
+          const token = STATE.token || localStorage.getItem("prepsync_token");
+          if (token) {
+            headers["Authorization"] = `Bearer ${token}`;
+          }
+          const options = {
+            method,
+            headers,
+            signal: AbortSignal.timeout(6000),
+          };
+          if (body && (method === "POST" || method === "PUT")) {
+            options.body = JSON.stringify(body);
+          }
+          const res = await fetch(`${BACKEND_BASE}${endpoint}`, options);
+          if (res.status === 401) {
+            console.warn("Unauthorized / session expired for endpoint:", endpoint);
+          }
+          if (!res.ok) {
+            const errData = await res.json().catch(() => ({}));
+            console.warn(`API call ${endpoint} error status: ${res.status}`, errData);
+            return null;
+          }
+          return await res.json();
+        } catch (err) {
+          console.warn(`API network error ${endpoint}:`, err.message);
+          return null;
+        }
+      }
+
+      // Backend Synchronization Engine
+      async function syncWithBackend() {
+        if (!BACKEND_BASE || !STATE.backendConnected || !STATE.token) return;
+
+        // 1. Fetch Profile and Streak from SQLite Database
+        const me = await apiCall("/api/v1/auth/me");
+        if (me && me.student) {
+          STATE.user = {
+            name: me.student.full_name,
+            email: me.student.email,
+            collegeId: me.student.student_id ? me.student.student_id.slice(0, 8) : "2024-CS-042",
+            avatar: STATE.user?.avatar || DEFAULT_USER.avatar,
+            track: "btech_cse",
+            goal: me.career_goal ? `${me.career_goal.role_title} (${me.career_goal.target_company_type})` : (STATE.user?.goal || DEFAULT_USER.goal),
+          };
+          if (me.streak && me.streak.current_streak_days !== undefined) {
+            STATE.streak = me.streak.current_streak_days;
+          }
+        }
+
+        // 2. Fetch Academic Tasks from SQLite Database
+        const dbTasks = await apiCall("/api/v1/academic/tasks");
+        if (Array.isArray(dbTasks) && dbTasks.length > 0) {
+          STATE.tasks = dbTasks.map((t) => ({
+            id: t.task_id,
+            title: t.task_title,
+            subject: t.subject,
+            type:
+              t.difficulty === "Hard"
+                ? "hard"
+                : t.difficulty === "Easy"
+                ? "light"
+                : "medium",
+            durationMin: t.remaining_duration_minutes || t.estimated_duration_minutes || 35,
+            completed: t.status === "Completed",
+            progress: t.completion_percentage || (t.status === "Completed" ? 100 : 0),
+            priority: t.priority,
+            deadline: t.deadline,
+          }));
+        } else if (STATE.user && STATE.user.email) {
+          // If DB tasks is empty, check if we have locally cached tasks for this user
+          const cacheKey = "prepsync_user_cache_" + STATE.user.email.toLowerCase();
+          const cachedRaw = localStorage.getItem(cacheKey);
+          if (cachedRaw) {
+            try {
+              const cached = JSON.parse(cachedRaw);
+              if (Array.isArray(cached.tasks) && cached.tasks.length > 0) {
+                STATE.tasks = cached.tasks;
+                // Sync cached tasks into SQLite database
+                for (const t of cached.tasks) {
+                  await apiCall("/api/v1/academic/tasks", "POST", {
+                    subject: t.subject || "Academics",
+                    task_title: t.title,
+                    task_type: t.type === "hard" ? "Assignment" : "Lab",
+                    priority: t.type === "hard" ? "High" : "Medium",
+                    difficulty: t.type === "hard" ? "Hard" : "Medium",
+                    estimated_duration_minutes: t.durationMin || 35,
+                    deadline: new Date(Date.now() + 3 * 24 * 3600 * 1000).toISOString(),
+                  });
+                }
+              }
+            } catch (e) {
+              console.warn("Error restoring user cached tasks:", e);
+            }
+          }
+        }
+
+        // 3. Fetch live AI Coach Guidance
+        const coachRes = await apiCall("/api/v1/coach/guidance");
+        if (coachRes && coachRes.guidance) {
+          STATE.aiAdvice = coachRes.guidance;
+          const adviceEl = document.getElementById("aiAdviceText");
+          if (adviceEl) adviceEl.innerText = `"${STATE.aiAdvice}"`;
+        }
+
+        // 4. Fetch AI Skill Analysis & Readiness
+        const skillsRes = await apiCall("/api/v1/ai/skills-analysis");
+        if (skillsRes) {
+          STATE.aiReadiness = skillsRes;
+        }
+
+        // 5. Fetch AI Synergies
+        const synRes = await apiCall("/api/v1/ai/synergies");
+        if (synRes) {
+          STATE.aiSynergies = synRes;
+        }
+
+        // 6. Fetch Active Placement Roadmap
+        const rmapRes = await apiCall("/api/v1/roadmap");
+        if (rmapRes && rmapRes.roadmap) {
+          STATE.aiRoadmap = rmapRes.roadmap;
+        }
+
+        persistState();
+        renderAllViews();
+      }
+
+      // Backend Connectivity Probe
+      async function probeBackend() {
+        const indicator = document.getElementById("backendStatusIndicator");
+        if (BACKEND_BASE) {
+          try {
+            const res = await fetch(`${BACKEND_BASE}/health`, {
+              signal: AbortSignal.timeout(1800),
+            });
+            if (res.ok) {
+              STATE.backendConnected = true;
+              if (indicator) {
+                indicator.className =
+                  "text-[10px] px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 font-semibold border border-emerald-200 flex items-center gap-1 cursor-pointer";
+                indicator.innerHTML =
+                  '<span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span><span>DB & AI Engine Connected</span>';
+                indicator.title = `Connected to ${BACKEND_BASE} • Click to re-sync`;
+                indicator.onclick = () => {
+                  if (STATE.token) {
+                    syncWithBackend();
+                    showToast("Synced with database! 🔄");
+                  } else {
+                    showToast("Database & AI Engine connected (Guest Mode)");
+                  }
+                };
+              }
+              if (STATE.token) {
+                await syncWithBackend();
+              }
+              return true;
+            }
+          } catch (e) {
+            // Standalone offline fallback
+          }
+        }
+        STATE.backendConnected = false;
+        if (indicator) {
+          const isCloud =
+            typeof window !== "undefined" &&
+            window.location &&
+            (window.location.protocol === "https:" ||
+              (window.location.hostname &&
+                (window.location.hostname.includes("vercel.app") ||
+                  window.location.hostname.includes("render.com")))) &&
+            typeof localStorage !== "undefined" &&
+            !localStorage.getItem("prepsync_backend_url");
+          indicator.className =
+            "text-[10px] px-2 py-0.5 rounded-full bg-sky-50 text-sky-700 font-semibold border border-sky-200 flex items-center gap-1 cursor-pointer";
+          indicator.innerHTML = isCloud
+            ? '<span class="w-1.5 h-1.5 rounded-full bg-sky-500"></span><span>Edge Standalone Mode</span>'
+            : '<span class="w-1.5 h-1.5 rounded-full bg-sky-500"></span><span>Local Fallback (Offline)</span>';
+          indicator.title = isCloud
+            ? "Running on edge CDN with client-side AI engine. Click to connect a cloud backend URL."
+            : `Cannot reach ${BACKEND_BASE || "local backend"} • Click to configure cloud backend`;
+          indicator.onclick = () => {
+            const currentUrl = localStorage.getItem("prepsync_backend_url") || "";
+            const customUrl = prompt(
+              "Enter Cloud Backend URL (e.g. Render FastAPI URL) or leave empty for standalone edge mode:",
+              currentUrl
+            );
+            if (customUrl !== null) {
+              if (customUrl.trim()) {
+                localStorage.setItem("prepsync_backend_url", customUrl.trim().replace(/\/+$/, ""));
+                showToast("Updated backend URL! Reconnecting...");
+                location.reload();
+              } else if (currentUrl) {
+                localStorage.removeItem("prepsync_backend_url");
+                showToast("Cleared custom backend. Using edge mode.");
+                location.reload();
+              } else {
+                probeBackend();
+              }
+            }
+          };
+        }
+        return false;
+      }
+
+      // Clear all tasks from UI and Database
+      async function clearAllTasks() {
+        if (!STATE.tasks || STATE.tasks.length === 0) {
+          showToast("Study queue is already empty!");
+          return;
+        }
+        if (confirm("Clear all tasks from your queue and database?")) {
+          if (STATE.backendConnected && STATE.token) {
+            for (const t of STATE.tasks) {
+              try {
+                await apiCall(`/api/v1/academic/tasks/${t.id}`, "DELETE");
+              } catch (e) {}
+            }
+          }
+          STATE.tasks = [];
+          persistState();
+          renderAllViews();
+          showToast("All tasks removed from queue & database! 🧹");
+        }
+      }
+
+      function formatMinutesToTime(totalMinutes) {
+        const normalized = ((totalMinutes % (24 * 60)) + 24 * 60) % (24 * 60);
+        const hours = Math.floor(normalized / 60);
+        const minutes = normalized % 60;
+        const ampm = hours >= 12 ? "PM" : "AM";
+        const displayH = hours % 12 === 0 ? 12 : hours % 12;
+        return `${displayH}:${minutes < 10 ? `0${minutes}` : minutes} ${ampm}`;
+      }
+
+      function calculateSchedule() {
+        const [startH, startM] = (STATE.studyWindow.start || "18:00")
+          .split(":")
+          .map(Number);
+        const [endH, endM] = (STATE.studyWindow.end || "23:00")
+          .split(":")
+          .map(Number);
+        let startMinTotal = startH * 60 + startM;
+        let endMinTotal = endH * 60 + endM;
+
+        if (endMinTotal <= startMinTotal) {
+          endMinTotal += 24 * 60;
+        }
+
+        const totalMinsAllowed = endMinTotal - startMinTotal;
+        let currentClock = startMinTotal + STATE.lateOffset;
+        let accumulatedStudy = 0;
+
+        const rank = { hard: 3, medium: 2, light: 1 };
+        const sorted = [...STATE.tasks].sort((a, b) => {
+          if (a.completed !== b.completed) return a.completed ? 1 : -1;
+          return (rank[b.type] || 0) - (rank[a.type] || 0);
+        });
+
+        const timeline = [];
+        let continuousWorkTime = 0;
+
+        sorted.forEach((task, idx) => {
+          if (continuousWorkTime >= 60) {
+            const breakStart = currentClock;
+            const breakEnd = breakStart + 15;
+            timeline.push({
+              id: `rest-${idx}`,
+              isBreak: true,
+              title: "☕ 15-Minute Refresh Break",
+              subtitle:
+                "Step away from screen, drink water, stretch your legs.",
+              start: formatMinutesToTime(breakStart),
+              end: formatMinutesToTime(breakEnd),
+              duration: 15,
+            });
+            currentClock += 15;
+            continuousWorkTime = 0;
+          }
+
+          const dur = task.durationMin;
+          const isOverTime = accumulatedStudy + dur > totalMinsAllowed;
+          const slotStart = currentClock;
+          const slotEnd = slotStart + dur;
+
+          timeline.push({
+            id: `slot-${task.id}`,
+            taskId: task.id,
+            isBreak: false,
+            title: task.title,
+            subject: task.subject,
+            type: task.type,
+            start: formatMinutesToTime(slotStart),
+            end: formatMinutesToTime(slotEnd),
+            duration: dur,
+            completed: task.completed,
+            isOverTime: isOverTime,
+            tag: isOverTime
+              ? "Shifted to Tomorrow"
+              : task.type === "hard"
+                ? "High Focus"
+                : task.type === "medium"
+                  ? "Written Work"
+                  : "Quick Review",
+          });
+
+          currentClock += dur;
+          accumulatedStudy += dur;
+          continuousWorkTime += dur;
+        });
+
+        return {
+          timeline,
+          totalStudy: accumulatedStudy,
+          budget: totalMinsAllowed,
+          isExceeded: accumulatedStudy > totalMinsAllowed,
+          startFormatted: formatMinutesToTime(startMinTotal),
+          endFormatted: formatMinutesToTime(endMinTotal),
+        };
+      }
+
+      function showToast(message) {
+        const toast = document.getElementById("toastNotification");
+        const text = document.getElementById("toastMessage");
+        if (text) text.innerText = message;
+        if (toast) {
+          toast.classList.remove("translate-y-20", "opacity-0");
+          setTimeout(() => {
+            toast.classList.add("translate-y-20", "opacity-0");
+          }, 2600);
+        }
+      }
+
+      function setTab(tabId) {
+        STATE.activeTab = tabId;
+        persistState();
+
+        // Update Tab Views
+        document
+          .querySelectorAll(".tab-view")
+          .forEach((view) => view.classList.add("hidden"));
+        const activeView = document.getElementById(`tab-${tabId}-view`);
+        if (activeView) activeView.classList.remove("hidden");
+
+        // Update Desktop Dock styles
+        document.querySelectorAll(".tab-btn").forEach((btn) => {
+          btn.classList.remove(
+            "bg-indigo-600",
+            "text-white",
+            "shadow-md",
+            "shadow-indigo-600/20",
+          );
+          btn.classList.add(
+            "text-slate-600",
+            "hover:text-slate-900",
+            "hover:bg-slate-100",
+          );
+        });
+        const currentDockBtn = document.getElementById(`dock-${tabId}`);
+        if (currentDockBtn) {
+          currentDockBtn.classList.add(
+            "bg-indigo-600",
+            "text-white",
+            "shadow-md",
+            "shadow-indigo-600/20",
+          );
+          currentDockBtn.classList.remove(
+            "text-slate-600",
+            "hover:text-slate-900",
+            "hover:bg-slate-100",
+          );
+        }
+
+        // Update Phone Nav styles
+        document.querySelectorAll(".phone-nav-btn").forEach((btn) => {
+          btn.classList.remove("text-indigo-600", "font-bold");
+          btn.classList.add("text-slate-400");
+        });
+        const currentPhoneBtn = document.getElementById(`pnav-${tabId}`);
+        if (currentPhoneBtn) {
+          currentPhoneBtn.classList.add("text-indigo-600", "font-bold");
+          currentPhoneBtn.classList.remove("text-slate-400");
+        }
+
+        renderAllViews();
+      }
+
+      async function toggleTaskDone(id) {
+        let isCompletedNow = false;
+        let targetedTask = null;
+        STATE.tasks = STATE.tasks.map((t) => {
+          if (t.id === id) {
+            const next = !t.completed;
+            isCompletedNow = next;
+            targetedTask = { ...t, completed: next, progress: next ? 100 : 35 };
+            return targetedTask;
+          }
+          return t;
+        });
+
+        if (targetedTask && STATE.backendConnected && STATE.token) {
+          try {
+            await apiCall(`/api/v1/academic/tasks/${id}`, "PUT", {
+              status: isCompletedNow ? "Completed" : "In Progress",
+              completion_percentage: isCompletedNow ? 100 : 35,
+            });
+            if (isCompletedNow) {
+              const progRes = await apiCall("/api/v1/progress/log", "POST", {
+                task_category: targetedTask.type === "hard" ? "Placement" : "Academic",
+                task_title: targetedTask.title,
+                duration_minutes: targetedTask.durationMin,
+                problems_solved: targetedTask.type === "hard" ? 1 : 0,
+                notes: "Completed via PrepPilot Hub",
+              });
+              if (progRes && progRes.streak) {
+                STATE.streak = progRes.streak.current_streak_days;
+              }
+            }
+          } catch (e) {
+            console.warn("DB toggle task update error:", e);
+          }
+        }
+
+        persistState();
+        renderAllViews();
+        if (isCompletedNow) {
+          showToast("Great progress! Task marked done & saved to DB 🎉");
+        }
+      }
+
+      async function deleteTask(id) {
+        if (STATE.backendConnected && STATE.token) {
+          try {
+            await apiCall(`/api/v1/academic/tasks/${id}`, "DELETE");
+          } catch (err) {
+            console.warn("DB task delete warning:", err);
+          }
+        }
+        STATE.tasks = STATE.tasks.filter((t) => t.id !== id);
+        persistState();
+        renderAllViews();
+        showToast("Task removed from schedule & database! 🗑️");
+      }
+
+      function setQuickType(type) {
+        STATE.quickType = type;
+        document.querySelectorAll(".quick-type-btn").forEach((btn) => {
+          btn.classList.remove(
+            "bg-white",
+            "text-indigo-700",
+            "text-amber-700",
+            "text-emerald-700",
+            "shadow-sm",
+          );
+          btn.classList.add("text-slate-600");
+        });
+        const activeBtn = document.getElementById(`typeBtn-${type}`);
+        if (activeBtn) {
+          activeBtn.classList.add("bg-white", "shadow-sm");
+          activeBtn.classList.remove("text-slate-600");
+          if (type === "hard") activeBtn.classList.add("text-indigo-700");
+          if (type === "medium") activeBtn.classList.add("text-amber-700");
+          if (type === "light") activeBtn.classList.add("text-emerald-700");
+        }
+      }
+
+      function updateStudyWindow() {
+        const startInput = document.getElementById("inputStartTime").value;
+        const endInput = document.getElementById("inputEndTime").value;
+        if (startInput) STATE.studyWindow.start = startInput;
+        if (endInput) STATE.studyWindow.end = endInput;
+        persistState();
+        renderAllViews();
+      }
+
+      function toggleMobileFrame() {
+        STATE.isMobileFrame = !STATE.isMobileFrame;
+        const wrapper = document.getElementById("deviceFrameWrapper");
+        const topBar = document.getElementById("phoneTopBar");
+        const bottomBar = document.getElementById("phoneBottomBar");
+        const label = document.getElementById("frameLabel");
+        const icon = document.getElementById("frameIcon");
+
+        if (STATE.isMobileFrame) {
+          wrapper.classList.add("phone-frame-active");
+          topBar.classList.remove("hidden");
+          topBar.classList.add("flex");
+          bottomBar.classList.remove("hidden");
+          bottomBar.classList.add("flex");
+          label.innerText = "Desktop View";
+          icon.setAttribute("data-lucide", "monitor");
+        } else {
+          wrapper.classList.remove("phone-frame-active");
+          topBar.classList.add("hidden");
+          topBar.classList.remove("flex");
+          bottomBar.classList.add("hidden");
+          bottomBar.classList.remove("flex");
+          label.innerText = "Phone Preview";
+          icon.setAttribute("data-lucide", "smartphone");
+        }
+        if (window.lucide) lucide.createIcons();
+      }
+
+      // Pomodoro Timer Controls
+      function toggleTimer() {
+        const btnText = document.getElementById("timerBtnText");
+        const btnIcon = document.getElementById("timerBtnIcon");
+
+        if (!STATE.isTimerRunning) {
+          STATE.isTimerRunning = true;
+          if (btnText) btnText.innerText = "Pause Focus";
+          if (btnIcon) btnIcon.setAttribute("data-lucide", "pause");
+          if (window.lucide) lucide.createIcons();
+
+          STATE.timerInterval = setInterval(() => {
+            if (STATE.timerSeconds > 0) {
+              STATE.timerSeconds--;
+              updateTimerDisplay();
+            } else {
+              clearInterval(STATE.timerInterval);
+              STATE.isTimerRunning = false;
+              STATE.timerSeconds = 25 * 60;
+              const bT = document.getElementById("timerBtnText");
+              const bI = document.getElementById("timerBtnIcon");
+              if (bT) bT.innerText = "Start Focus";
+              if (bI) bI.setAttribute("data-lucide", "play");
+              updateTimerDisplay();
+              if (window.lucide) lucide.createIcons();
+              playChime();
+              showToast(
+                "🎉 Focus Sprint Complete! 25 minutes logged. Take 5m rest!",
+              );
+            }
+          }, 1000);
+        } else {
+          clearInterval(STATE.timerInterval);
+          STATE.isTimerRunning = false;
+          if (btnText) btnText.innerText = "Resume Focus";
+          if (btnIcon) btnIcon.setAttribute("data-lucide", "play");
+          if (window.lucide) lucide.createIcons();
+        }
+      }
+
+      function resetTimer() {
+        if (STATE.timerInterval) clearInterval(STATE.timerInterval);
+        STATE.isTimerRunning = false;
+        STATE.timerSeconds = 25 * 60;
+        const btnText = document.getElementById("timerBtnText");
+        const btnIcon = document.getElementById("timerBtnIcon");
+        if (btnText) btnText.innerText = "Start Focus";
+        if (btnIcon) btnIcon.setAttribute("data-lucide", "play");
+        updateTimerDisplay();
+        if (window.lucide) lucide.createIcons();
+        showToast("Focus timer reset to 25:00");
+      }
+
+      function updateTimerDisplay() {
+        const minutes = Math.floor(STATE.timerSeconds / 60);
+        const seconds = STATE.timerSeconds % 60;
+        const formatted = `${minutes < 10 ? "0" : ""}${minutes}:${seconds < 10 ? "0" : ""}${seconds}`;
+        const display = document.getElementById("timerDisplay");
+        if (display) display.innerText = formatted;
+      }
+
+      // Running Late Offset
+      function handleLateOffset() {
+        STATE.lateOffset += 20;
+        persistState();
+        renderAllViews();
+        showToast(`Schedule shifted forward by +${STATE.lateOffset} mins! ⏰`);
+      }
+
+      function resetLateOffset() {
+        STATE.lateOffset = 0;
+        persistState();
+        renderAllViews();
+        showToast("Schedule reset to original on-time plan! 🎯");
+      }
+
+      function selectDay(idx) {
+        STATE.selectedDayIndex = idx;
+        persistState();
+        const selected = STATE.weekDays[idx];
+        const header = document.getElementById("timelineDateHeader");
+        if (header && selected) {
+          header.innerText = `${selected.day}, ${selected.date} Oct • Relaxed Plan`;
+        }
+        renderAllViews();
+      }
+
+      function dismissAiAdvice() {
+        const banner = document.getElementById("aiAdviceBanner");
+        if (banner) {
+          banner.style.transition = "all 0.3s ease";
+          banner.style.opacity = "0";
+          banner.style.transform = "scale(0.95)";
+          setTimeout(() => banner.classList.add("hidden"), 300);
+        }
+      }
+
+      // Add Task Handlers
+      async function handleAddTaskSubmit(e) {
+        e.preventDefault();
+        const textarea = document.getElementById("quickTaskText");
+        const text = textarea.value.trim();
+        if (!text) {
+          showToast("Please type a task or study topic to add!");
+          return;
+        }
+
+        const defaultDurations = { hard: 50, medium: 35, light: 20 };
+        const defaultSubjects = {
+          hard: "Computer Science",
+          medium: "College Coursework",
+          light: "General Revision",
+        };
+
+        const newTask = {
+          id: `task-${Date.now()}`,
+          title: text,
+          subject: defaultSubjects[STATE.quickType] || "Academics",
+          type: STATE.quickType,
+          durationMin: defaultDurations[STATE.quickType] || 30,
+          completed: false,
+          progress: 0,
+        };
+
+        // Persist directly to SQLite database if backend sync is active
+        if (STATE.backendConnected && STATE.token) {
+          try {
+            const dbPayload = {
+              subject: newTask.subject,
+              task_title: newTask.title,
+              task_type: newTask.type === "hard" ? "Assignment" : newTask.type === "medium" ? "Lab" : "Assignment",
+              priority: newTask.type === "hard" ? "High" : newTask.type === "medium" ? "Medium" : "Low",
+              difficulty: newTask.type === "hard" ? "Hard" : newTask.type === "light" ? "Easy" : "Medium",
+              estimated_duration_minutes: newTask.durationMin,
+              deadline: new Date(Date.now() + 3 * 24 * 3600 * 1000).toISOString(),
+            };
+            const res = await apiCall("/api/v1/academic/tasks", "POST", dbPayload);
+            if (res && res.task) {
+              newTask.id = res.task.task_id;
+            }
+          } catch (err) {
+            console.warn("Direct DB save error:", err);
+          }
+        }
+
+        STATE.tasks.push(newTask);
+        textarea.value = "";
+        persistState();
+        renderAllViews();
+        showToast(STATE.backendConnected ? "Task saved to Database & Queue! 💾" : "Task added to your study queue!");
+      }
+
+      // NLP Heuristic AI Task Extractor
+      function handleAiAutoExtract() {
+        const textarea = document.getElementById("quickTaskText");
+        let text = textarea.value.trim();
+        const btnLabel = document.getElementById("aiExtractLabel");
+
+        if (!text) {
+          text =
+            "Finish 2 C programs on pointers, submit Chemistry lab record, read 10 slides of DBMS, solve 3 calculus integrals";
+          textarea.value = text;
+        }
+
+        btnLabel.innerText = "Analyzing Notes with AI...";
+
+        setTimeout(async () => {
+          const rawParts = text
+            .split(/\n|,|;|\band\b/i)
+            .map((p) => p.trim())
+            .filter((p) => p.length > 3);
+
+          const extracted = [];
+          for (let idx = 0; idx < rawParts.length; idx++) {
+            const phrase = rawParts[idx];
+            const lower = phrase.toLowerCase();
+            let type = "medium";
+            let dur = 35;
+            let subject = "College Coursework";
+
+            if (
+              lower.includes("c ") ||
+              lower.includes("c++") ||
+              lower.includes("pointer") ||
+              lower.includes("code") ||
+              lower.includes("program") ||
+              lower.includes("dsa") ||
+              lower.includes("algo")
+            ) {
+              subject = "Data Structures";
+            } else if (
+              lower.includes("chemistry") ||
+              lower.includes("physics") ||
+              lower.includes("thermo") ||
+              lower.includes("lab") ||
+              lower.includes("record")
+            ) {
+              subject = "Applied Sciences";
+            } else if (
+              lower.includes("dbms") ||
+              lower.includes("sql") ||
+              lower.includes("database")
+            ) {
+              subject = "Database Systems";
+            } else if (
+              lower.includes("math") ||
+              lower.includes("calculus") ||
+              lower.includes("integral") ||
+              lower.includes("matrix")
+            ) {
+              subject = "Mathematics";
+            } else if (
+              lower.includes("os") ||
+              lower.includes("operating") ||
+              lower.includes("linux")
+            ) {
+              subject = "Operating Systems";
+            }
+
+            if (
+              lower.includes("program") ||
+              lower.includes("code") ||
+              lower.includes("pointer") ||
+              lower.includes("solve") ||
+              lower.includes("calculus") ||
+              lower.includes("integral")
+            ) {
+              type = "hard";
+              dur = 45;
+            } else if (
+              lower.includes("read") ||
+              lower.includes("slides") ||
+              lower.includes("revision") ||
+              lower.includes("skim") ||
+              lower.includes("review")
+            ) {
+              type = "light";
+              dur = 20;
+            } else if (
+              lower.includes("lab") ||
+              lower.includes("record") ||
+              lower.includes("write") ||
+              lower.includes("submit") ||
+              lower.includes("file")
+            ) {
+              type = "medium";
+              dur = 35;
+            }
+
+            const capitalized =
+              phrase.charAt(0).toUpperCase() + phrase.slice(1);
+            const taskObj = {
+              id: `task-${Date.now()}-${idx}`,
+              title: capitalized,
+              subject: subject,
+              type: type,
+              durationMin: dur,
+              completed: false,
+              progress: 0,
+            };
+
+            // Save to DB if connected
+            if (STATE.backendConnected && STATE.token) {
+              try {
+                const res = await apiCall("/api/v1/academic/tasks", "POST", {
+                  subject: taskObj.subject,
+                  task_title: taskObj.title,
+                  task_type: taskObj.type === "hard" ? "Assignment" : "Lab",
+                  priority: taskObj.type === "hard" ? "High" : "Medium",
+                  difficulty: taskObj.type === "hard" ? "Hard" : "Medium",
+                  estimated_duration_minutes: taskObj.durationMin,
+                  deadline: new Date(Date.now() + 4 * 24 * 3600 * 1000).toISOString(),
+                });
+                if (res && res.task) {
+                  taskObj.id = res.task.task_id;
+                }
+              } catch (e) {}
+            }
+            extracted.push(taskObj);
+          }
+
+          if (extracted.length > 0) {
+            STATE.tasks = [...STATE.tasks, ...extracted];
+            textarea.value = "";
+            persistState();
+            renderAllViews();
+            showToast(
+              STATE.backendConnected
+                ? `AI extracted ${extracted.length} tasks & saved to DB! 💾✨`
+                : `AI extracted ${extracted.length} structured study tasks! ✨`,
+            );
+          }
+          btnLabel.innerText = "AI Auto-Extract";
+        }, 300);
+      }
+
+      // Schedule Generator - Powered by Fatigue-Aware AI Bandwidth Engine
+      async function handleGenerateSchedule() {
+        const btnLabel = document.getElementById("generateScheduleLabel");
+        btnLabel.innerText = "Running AI Bandwidth Engine...";
+
+        if (STATE.backendConnected && STATE.token) {
+          try {
+            const planRes = await apiCall("/api/v1/plan/daily/generate", "POST", {
+              energy_level: STATE.quickType === "hard" ? "High" : STATE.quickType === "light" ? "Low" : "Medium",
+              available_minutes: calculateSchedule().budget,
+            });
+            if (planRes) {
+              STATE.dailyPlan = planRes;
+              if (planRes.ai_strategic_summary) {
+                STATE.aiAdvice = planRes.ai_strategic_summary;
+                const adviceEl = document.getElementById("aiAdviceText");
+                if (adviceEl) adviceEl.innerText = `"${STATE.aiAdvice}"`;
+              }
+              persistState();
+              renderAllViews();
+              btnLabel.innerText = "Generate Realistic Schedule";
+              showToast("AI Bandwidth Engine generated schedule & saved to DB! 🎯");
+              return;
+            }
+          } catch (e) {
+            console.warn("AI generation failed, fallback to local:", e);
+          }
+        }
+
+        setTimeout(() => {
+          const rank = { hard: 3, medium: 2, light: 1 };
+          STATE.tasks.sort((a, b) => {
+            if (a.completed !== b.completed) return a.completed ? 1 : -1;
+            return (rank[b.type] || 0) - (rank[a.type] || 0);
+          });
+
+          STATE.aiAdvice =
+            "Optimal order: High-focus deep work is scheduled early. Automatic 15-minute buffers keep your energy steady!";
+          const adviceEl = document.getElementById("aiAdviceText");
+          if (adviceEl) adviceEl.innerText = `"${STATE.aiAdvice}"`;
+
+          persistState();
+          renderAllViews();
+          btnLabel.innerText = "Generate Realistic Schedule";
+          showToast("Realistic schedule generated! 🎯");
+        }, 300);
+      }
+
+      // Dynamic Plan Adaptation - Guilt-free real-time recalculation
+      async function handleAdaptPlan(trigger = "Surprise Academic Assignment") {
+        if (!STATE.backendConnected || !STATE.token) {
+          showToast("Connect to backend to run dynamic AI plan adaptation! ⚡");
+          return;
+        }
+        showToast("Running AI Adaptation Engine... 🧠");
+        const res = await apiCall("/api/v1/plan/adapt", "POST", {
+          trigger_event: trigger,
+          details: { reason: "Real-time student dynamic rebalancing" },
+          additional_academic_minutes: 30,
+        });
+        if (res && res.updated_plan) {
+          STATE.dailyPlan = res.updated_plan;
+          STATE.aiAdvice = res.guilt_free_reassurance || res.adaptation_summary;
+          const adviceEl = document.getElementById("aiAdviceText");
+          if (adviceEl) adviceEl.innerText = `"${STATE.aiAdvice}"`;
+          await syncWithBackend();
+          showToast("Schedule dynamically adapted! Guilt-free rebalance active. 🛡️");
+        }
+      }
+
+      function generateMicroSteps(task) {
+        const title = (task && task.title ? task.title : "").trim();
+        const subject = (task && task.subject ? task.subject : "").trim();
+        const type = task && task.type ? task.type : "medium";
+        const duration = task && task.durationMin ? task.durationMin : 35;
+        const combined = (title + " " + subject).toLowerCase();
+
+        // 1. Coding / Programming / DSA
+        if (
+          combined.includes("pointer") ||
+          combined.includes("c++") ||
+          combined.includes("c ") ||
+          combined.includes("code") ||
+          combined.includes("program") ||
+          combined.includes("dsa") ||
+          combined.includes("algo") ||
+          combined.includes("python") ||
+          combined.includes("java") ||
+          combined.includes("tree") ||
+          combined.includes("sql")
+        ) {
+          return {
+            kickstart: `Open your code editor or notebook right now and write down the starter boilerplate. Don't worry about solving it yet.`,
+            steps: [
+              `Clarify the input format and test constraints on paper (5 mins)`,
+              `Write the core logic loop and primary function for "${title || "problem"}" without worrying about edge cases (15 mins)`,
+              `Add boundary conditions, memory deallocation, and null checks (10 mins)`,
+              `Compile and execute with 2 custom test inputs (5 mins)`,
+            ],
+            stepMinutes: [5, 15, 10, 5],
+          };
+        }
+
+        // 2. Lab Record / Experiments / Chemistry / Physics
+        if (
+          combined.includes("record") ||
+          combined.includes("lab") ||
+          combined.includes("experiment") ||
+          combined.includes("physics") ||
+          combined.includes("chemistry") ||
+          combined.includes("circuit") ||
+          combined.includes("manual")
+        ) {
+          return {
+            kickstart: `Lay out your record notebook, pens, and open the lab sheet PDF. Copy the experiment title first.`,
+            steps: [
+              `Write down the Aim, Apparatus required, and governing formula (8 mins)`,
+              `Neatly sketch the circuit or experimental apparatus schematic (10 mins)`,
+              `Enter sample observation readings and compute the percentage error (10 mins)`,
+              `Write the 2-sentence conclusion, sign off, and pack your file (5 mins)`,
+            ],
+            stepMinutes: [8, 10, 10, 5],
+          };
+        }
+
+        // 3. Slides / Reading / Revision
+        if (
+          combined.includes("slide") ||
+          combined.includes("read") ||
+          combined.includes("deck") ||
+          combined.includes("chapter") ||
+          combined.includes("skim") ||
+          combined.includes("revision")
+        ) {
+          return {
+            kickstart: `Open slide 1 right now and skim headings and bold text without taking notes.`,
+            steps: [
+              `Skim the first 5 slides and highlight 3 core concepts/definitions (6 mins)`,
+              `Summarize key takeaways in 3 bullet points in your own words (8 mins)`,
+              `Test yourself with 2 quick practice or interview questions (6 mins)`,
+            ],
+            stepMinutes: [6, 8, 6],
+          };
+        }
+
+        // 4. Mathematics / Calculus / Numericals
+        if (
+          combined.includes("math") ||
+          combined.includes("calculus") ||
+          combined.includes("integral") ||
+          combined.includes("derivative") ||
+          combined.includes("matrix") ||
+          combined.includes("numerical") ||
+          combined.includes("solve")
+        ) {
+          return {
+            kickstart: `Open a fresh notebook page right now for "${title || "math"}". Write down the governing formula to break the inertia.`,
+            steps: [
+              `Identify standard integral/derivative forms and substitution terms (7 mins)`,
+              `Solve the primary problem step-by-step showing full working (15 mins)`,
+              `Solve remaining problems and check substitutions and signs (10 mins)`,
+              `Verify arithmetic and box the final answers neatly (5 mins)`,
+            ],
+            stepMinutes: [7, 15, 10, 5],
+          };
+        }
+
+        // 5. Fallback based on difficulty type
+        if (type === "hard") {
+          return {
+            kickstart: `Open your code editor or notebook right now and write down the starter boilerplate. Don't worry about solving it yet.`,
+            steps: [
+              `Clarify the input format and test constraints on paper (5 mins)`,
+              `Write the core logic loop without worrying about edge cases (15 mins)`,
+              `Add boundary conditions and memory deallocation / null checks (10 mins)`,
+              `Compile and execute with 2 custom test inputs (5 mins)`,
+            ],
+            stepMinutes: [5, 15, 10, 5],
+          };
+        } else if (type === "medium") {
+          return {
+            kickstart: `Lay out your record notebook, pens, and open the lab sheet PDF. Copy the experiment title first.`,
+            steps: [
+              `Write down the Aim, Apparatus required, and governing formula (8 mins)`,
+              `Neatly sketch the circuit or experimental apparatus schematic (10 mins)`,
+              `Enter sample observation readings and compute the percentage error (10 mins)`,
+              `Write the 2-sentence conclusion, sign off, and pack your file (5 mins)`,
+            ],
+            stepMinutes: [8, 10, 10, 5],
+          };
+        } else {
+          return {
+            kickstart: `Open slide 1 right now and skim headings and bold text without taking notes.`,
+            steps: [
+              `Skim the first 5 slides and highlight 3 core concepts/definitions (6 mins)`,
+              `Summarize key takeaways in 3 bullet points in your own words (8 mins)`,
+              `Test yourself with 2 quick practice or interview questions (6 mins)`,
+            ],
+            stepMinutes: [6, 8, 6],
+          };
+        }
+      }
+
+      // Task Breakdown Modal
+      let activeBreakdownTaskId = null;
+      let activeBreakdownTask = null;
+      let activeBreakdownSteps = [];
+
+      async function handleBreakdownTask(taskId) {
+        const task = STATE.tasks.find((t) => t.id === taskId);
+        if (!task) return;
+        activeBreakdownTaskId = taskId;
+        activeBreakdownTask = task;
+
+        const modal = document.getElementById("breakdownModal");
+        const title = document.getElementById("breakdownModalTaskTitle");
+        const meta = document.getElementById("breakdownModalTaskMeta");
+        const loading = document.getElementById("breakdownLoadingState");
+        const content = document.getElementById("breakdownContentArea");
+        const kickstart = document.getElementById("breakdownKickstartText");
+        const stepsList = document.getElementById("breakdownStepsList");
+
+        title.innerText = task.title;
+        meta.innerText = `${task.subject} • ${task.durationMin} mins • ${task.type.toUpperCase()}`;
+
+        modal.classList.remove("hidden");
+        loading.classList.remove("hidden");
+        content.classList.add("hidden");
+
+        let breakdownData = null;
+        if (STATE.backendConnected && STATE.token) {
+          try {
+            breakdownData = await apiCall("/api/v1/ai/task-breakdown", "POST", {
+              task_title: task.title,
+              subject: task.subject,
+              task_type: task.type,
+              duration_minutes: task.durationMin,
+            });
+          } catch (e) {
+            console.warn("Backend task breakdown failed, using local engine:", e);
+          }
+        }
+
+        let starterText = "";
+        let steps = [];
+        let stepMinutes = [];
+
+        if (breakdownData && breakdownData.status === "success" && Array.isArray(breakdownData.steps)) {
+          starterText = breakdownData.kickstart;
+          steps = breakdownData.steps;
+          stepMinutes = breakdownData.step_minutes || [];
+        } else {
+          const localBd = generateMicroSteps(task);
+          starterText = localBd.kickstart;
+          steps = localBd.steps;
+          stepMinutes = localBd.stepMinutes || [];
+        }
+
+        activeBreakdownSteps = steps.map((s, idx) => ({
+          title: s,
+          durationMin: stepMinutes[idx] || Math.max(5, Math.round((task.durationMin || 35) / steps.length)),
+        }));
+
+        setTimeout(() => {
+          loading.classList.add("hidden");
+          content.classList.remove("hidden");
+
+          kickstart.innerText = starterText;
+
+          const progressBadge = document.getElementById("breakdownProgressBadge");
+          const progressBar = document.getElementById("breakdownProgressBar");
+          if (progressBadge) progressBadge.innerText = `0 of ${steps.length} completed (0%)`;
+          if (progressBar) progressBar.style.width = "0%";
+
+          stepsList.innerHTML = steps
+            .map(
+              (s, idx) => `
+          <label class="flex items-start gap-3 p-3 rounded-2xl bg-slate-50 border border-slate-200/80 hover:bg-slate-100/80 cursor-pointer transition">
+            <input type="checkbox" onchange="handleStepCheckboxToggle(this)" class="mt-0.5 rounded text-indigo-600 focus:ring-indigo-500 w-4 h-4 cursor-pointer">
+            <div class="flex-1">
+              <div class="flex items-center justify-between mb-0.5">
+                <span class="text-xs font-bold text-slate-800">Step ${idx + 1}</span>
+                <span class="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200">${stepMinutes[idx] ? `${stepMinutes[idx]} mins` : "10 mins"}</span>
+              </div>
+              <p class="text-xs text-slate-700 font-medium leading-relaxed">${s}</p>
+            </div>
+          </label>
+        `,
+            )
+            .join("");
+
+          if (window.lucide) lucide.createIcons();
+        }, 300);
+      }
+
+      function handleStepCheckboxToggle(checkbox) {
+        const textWrapper = checkbox.parentElement.querySelector("p");
+        if (checkbox.checked) {
+          if (textWrapper) textWrapper.classList.add("line-through", "text-slate-400");
+        } else {
+          if (textWrapper) textWrapper.classList.remove("line-through", "text-slate-400");
+        }
+
+        const allCheckboxes = document.querySelectorAll(
+          '#breakdownStepsList input[type="checkbox"]',
+        );
+        const checkedCount = Array.from(allCheckboxes).filter((c) => c.checked).length;
+        const totalCount = allCheckboxes.length;
+        const pct = totalCount > 0 ? Math.round((checkedCount / totalCount) * 100) : 0;
+
+        const progressBadge = document.getElementById("breakdownProgressBadge");
+        const progressBar = document.getElementById("breakdownProgressBar");
+        if (progressBadge) progressBadge.innerText = `${checkedCount} of ${totalCount} completed (${pct}%)`;
+        if (progressBar) progressBar.style.width = `${pct}%`;
+
+        if (checkedCount === totalCount && totalCount > 0) {
+          playChime();
+          showToast("All micro-steps completed! Crushed this task! 🚀");
+          if (activeBreakdownTaskId) {
+            const current = STATE.tasks.find((t) => t.id === activeBreakdownTaskId);
+            if (current && !current.completed) {
+              toggleTaskDone(activeBreakdownTaskId);
+            }
+          }
+        }
+      }
+
+      function closeBreakdownModal() {
+        const modal = document.getElementById("breakdownModal");
+        if (modal) modal.classList.add("hidden");
+        activeBreakdownTaskId = null;
+        activeBreakdownTask = null;
+      }
+
+      async function splitTaskIntoMicroSteps() {
+        if (!activeBreakdownTaskId || !activeBreakdownTask || activeBreakdownSteps.length === 0) return;
+        const parentId = activeBreakdownTaskId;
+        const parent = activeBreakdownTask;
+
+        const parentIdx = STATE.tasks.findIndex((t) => t.id === parentId);
+        if (parentIdx === -1) return;
+
+        const cleanStepTitle = (raw) => {
+          return raw.replace(/\(\d+\s*mins?\)/i, "").trim();
+        };
+
+        const newSubTasks = activeBreakdownSteps.map((st, idx) => ({
+          id: `task-${Date.now()}-${idx}`,
+          title: `${parent.title}: Step ${idx + 1} - ${cleanStepTitle(st.title)}`,
+          subject: parent.subject,
+          type: idx === 0 ? "light" : idx === 1 ? parent.type : "medium",
+          durationMin: st.durationMin || 15,
+          completed: false,
+          progress: 0,
+          priority: parent.priority || "Medium",
+          deadline: parent.deadline,
+        }));
+
+        STATE.tasks.splice(parentIdx, 1, ...newSubTasks);
+
+        if (STATE.backendConnected && STATE.token) {
+          try {
+            await apiCall(`/api/v1/academic/tasks/${parentId}`, "DELETE");
+            for (const st of newSubTasks) {
+              const res = await apiCall("/api/v1/academic/tasks", "POST", {
+                subject: st.subject,
+                task_title: st.title,
+                task_type: "Assignment",
+                priority: st.priority,
+                difficulty: st.type === "hard" ? "Hard" : st.type === "light" ? "Easy" : "Medium",
+                estimated_duration_minutes: st.durationMin,
+                deadline: st.deadline || new Date(Date.now() + 3 * 24 * 3600 * 1000).toISOString(),
+              });
+              if (res && res.task) st.id = res.task.task_id;
+            }
+          } catch (e) {
+            console.warn("Error syncing split sub-tasks to DB:", e);
+          }
+        }
+
+        persistState();
+        closeBreakdownModal();
+        renderAllViews();
+        showToast(`Task split into ${newSubTasks.length} micro-steps in your study queue! 🎯`);
+      }
+
+      // Profile Handlers
+      function selectTrack(trackId) {
+        if (STATE.user) {
+          STATE.user.track = trackId;
+          persistState();
+          renderAllViews();
+          showToast("Course track updated!");
+        }
+      }
+
+      function saveProfile() {
+        if (!STATE.user) return;
+        const nameInput = document.getElementById("profNameInput");
+        const collegeIdInput = document.getElementById("profCollegeIdInput");
+        const goalInput = document.getElementById("profGoalInput");
+
+        if (nameInput)
+          STATE.user.name = nameInput.value.trim() || STATE.user.name;
+        if (collegeIdInput)
+          STATE.user.collegeId =
+            collegeIdInput.value.trim() || STATE.user.collegeId;
+        if (goalInput)
+          STATE.user.goal = goalInput.value.trim() || STATE.user.goal;
+
+        persistState();
+        renderAllViews();
+        showToast("Profile saved successfully! ✅");
+      }
+
+      function resetDemoData() {
+        STATE.user = { ...DEFAULT_USER };
+        STATE.tasks = [];
+        STATE.lateOffset = 0;
+        STATE.studyWindow = { start: "18:00", end: "23:00" };
+        persistState();
+        renderAllViews();
+        showToast("Demo data reset to clean slate! 🔄");
+      }
+
+      // Auth Handlers
+      function openAuthModal(mode = "signin") {
+        STATE.authMode = mode;
+        const modal = document.getElementById("authModal");
+        const title = document.getElementById("authModalTitle");
+        const subtitle = document.getElementById("authModalSubtitle");
+        const nameField = document.getElementById("authNameField");
+        const submitBtn = document.getElementById("authSubmitBtn");
+        const togglePrompt = document.getElementById("authTogglePrompt");
+        const toggleModeBtn = document.getElementById("authToggleModeBtn");
+
+        if (mode === "signup") {
+          title.innerText = "Create Student Account";
+          subtitle.innerText =
+            "Start organizing your semester with empathetic AI";
+          nameField.classList.remove("hidden");
+          submitBtn.innerText = "Create Account";
+          togglePrompt.innerText = "Already have an account? ";
+          toggleModeBtn.innerText = "Sign in";
+        } else {
+          title.innerText = "Welcome Back";
+          subtitle.innerText = "Sign in to access your saved schedule";
+          nameField.classList.add("hidden");
+          submitBtn.innerText = "Sign In";
+          togglePrompt.innerText = "New here? ";
+          toggleModeBtn.innerText = "Create an account";
+        }
+
+        modal.classList.remove("hidden");
+        if (window.lucide) lucide.createIcons();
+      }
+
+      function closeAuthModal() {
+        const modal = document.getElementById("authModal");
+        if (modal) modal.classList.add("hidden");
+      }
+
+      function toggleAuthMode() {
+        const nextMode = STATE.authMode === "signin" ? "signup" : "signin";
+        openAuthModal(nextMode);
+      }
+
+      async function handleAuthSubmit(e) {
+        e.preventDefault();
+        const email = document.getElementById("authEmailInput").value.trim();
+        const password = document.getElementById("authPasswordInput")?.value || "password123";
+        const nameInput = document.getElementById("authNameInput");
+        const userName =
+          (nameInput && nameInput.value.trim()) ||
+          email.split("@")[0] ||
+          "Student";
+
+        const lowerEmail = email.toLowerCase();
+
+        if (STATE.backendConnected) {
+          try {
+            let res = null;
+            if (STATE.authMode === "signup") {
+              res = await apiCall("/api/v1/auth/signup", "POST", {
+                email,
+                password,
+                full_name: userName,
+                college_name: "Engineering College",
+                degree: "B.Tech",
+                branch: "Computer Science",
+                current_year: 3,
+                current_semester: 5,
+                graduation_year: 2026,
+                daily_available_prep_minutes: 150,
+                preferred_study_hours_per_day: 3.0,
+                target_role: "Software Developer",
+                target_company_type: "Product-based",
+              });
+            } else {
+              res = await apiCall("/api/v1/auth/login", "POST", { email, password });
+            }
+
+            if (res && res.token) {
+              STATE.token = res.token;
+              localStorage.setItem("prepsync_token", res.token);
+              STATE.user = {
+                name: res.student?.full_name || userName,
+                email: res.student?.email || email,
+                collegeId: res.student?.student_id
+                  ? res.student.student_id.slice(0, 8)
+                  : "2024-CS-042",
+                avatar: DEFAULT_USER.avatar,
+                track: "btech_cse",
+                goal: "Score 9.0+ SGPA & Build 3 Coding Projects",
+              };
+              persistState();
+              closeAuthModal();
+              await syncWithBackend();
+              showToast(
+                `Welcome back, ${STATE.user.name.split(" ")[0]}! Your data has been restored 🎉`
+              );
+              return;
+            }
+          } catch (err) {
+            console.warn("Backend auth failed, fallback to local:", err);
+          }
+        }
+
+        // Offline / Local fallback restore
+        const cachedRaw = localStorage.getItem("prepsync_user_cache_" + lowerEmail);
+        let cached = null;
+        if (cachedRaw) {
+          try {
+            cached = JSON.parse(cachedRaw);
+          } catch (e) {}
+        }
+
+        STATE.user = (cached && cached.user) || {
+          name: userName,
+          email: email,
+          collegeId: "2024-CS-042",
+          avatar: DEFAULT_USER.avatar,
+          track: "btech_cse",
+          goal: "Score 9.0+ SGPA & Build 3 Coding Projects",
+        };
+        STATE.token = "local-session-" + Date.now();
+        localStorage.setItem("prepsync_token", STATE.token);
+        STATE.tasks = (cached && Array.isArray(cached.tasks)) ? cached.tasks : [];
+        STATE.streak = (cached && cached.streak !== undefined) ? cached.streak : 1;
+        if (cached && cached.studyWindow) STATE.studyWindow = cached.studyWindow;
+        if (cached && cached.lateOffset) STATE.lateOffset = cached.lateOffset;
+
+        persistState();
+        closeAuthModal();
+        renderAllViews();
+        showToast(
+          `Welcome back, ${STATE.user.name.split(" ")[0]}! Your saved data is restored 🎉`
+        );
+      }
+
+      async function handleDemoLogin() {
+        const demoEmail = "demo@preppilot.com";
+        if (STATE.backendConnected) {
+          try {
+            const res = await apiCall("/api/v1/auth/login", "POST", {
+              email: demoEmail,
+              password: "password123",
+            });
+            if (res && res.token) {
+              STATE.token = res.token;
+              localStorage.setItem("prepsync_token", res.token);
+              STATE.user = {
+                name: res.student?.full_name || "Aarav Sharma",
+                email: res.student?.email || demoEmail,
+                collegeId: res.student?.student_id
+                  ? res.student.student_id.slice(0, 8)
+                  : "2024-CS-042",
+                avatar: DEFAULT_USER.avatar,
+                track: "btech_cse",
+                goal: "Software Developer (FAANG / Tier-1)",
+              };
+              persistState();
+              closeAuthModal();
+              await syncWithBackend();
+              showToast("Welcome back, Aarav! Data restored from SQLite DB & AI Engine ⚡");
+              return;
+            }
+          } catch (e) {
+            console.warn("Demo login backend failed, using local cache:", e);
+          }
+        }
+
+        // Offline / Local fallback restore
+        const cachedRaw = localStorage.getItem("prepsync_user_cache_" + demoEmail);
+        let cached = null;
+        if (cachedRaw) {
+          try {
+            cached = JSON.parse(cachedRaw);
+          } catch (e) {}
+        }
+
+        STATE.user = (cached && cached.user) || { ...DEFAULT_USER, email: demoEmail };
+        STATE.token = "demo-local-token-" + Date.now();
+        localStorage.setItem("prepsync_token", STATE.token);
+        STATE.tasks = (cached && Array.isArray(cached.tasks)) ? cached.tasks : [];
+        STATE.streak = (cached && cached.streak !== undefined) ? cached.streak : 14;
+        if (cached && cached.studyWindow) STATE.studyWindow = cached.studyWindow;
+        if (cached && cached.lateOffset) STATE.lateOffset = cached.lateOffset;
+
+        persistState();
+        closeAuthModal();
+        renderAllViews();
+        showToast("Signed in as Aarav Sharma! Your saved data is restored ⚡");
+      }
+
+      async function handleLogout() {
+        // 1. Store user data safely before clearing view
+        if (STATE.user && STATE.user.email) {
+          try {
+            const cacheKey = "prepsync_user_cache_" + STATE.user.email.toLowerCase();
+            localStorage.setItem(
+              cacheKey,
+              JSON.stringify({
+                user: { ...STATE.user },
+                tasks: [...STATE.tasks],
+                streak: STATE.streak,
+                studyWindow: { ...STATE.studyWindow },
+                lateOffset: STATE.lateOffset,
+                savedAt: new Date().toISOString(),
+              })
+            );
+          } catch (e) {
+            console.warn("Error caching user data on logout:", e);
+          }
+        }
+
+        // 2. Notify backend of logout if connected
+        if (STATE.backendConnected && STATE.token) {
+          try {
+            await apiCall("/api/v1/auth/logout", "POST");
+          } catch (e) {
+            console.warn("Backend logout notice failed:", e);
+          }
+        }
+
+        // 3. Clear active session & personal data from screen
+        STATE.user = null;
+        STATE.token = null;
+        STATE.tasks = [];
+        STATE.streak = 0;
+        STATE.dailyPlan = null;
+        STATE.aiReadiness = null;
+        STATE.aiSynergies = null;
+        STATE.aiRoadmap = null;
+        STATE.lateOffset = 0;
+        localStorage.removeItem("prepsync_token");
+
+        // 4. Persist empty state & render clean guest view
+        persistState();
+        renderAllViews();
+        showToast("Logged out safely. Your study data is stored! 🔒");
+      }
+
+      // View Rendering
+      function renderAllViews() {
+        const schedule = calculateSchedule();
+
+        // Update Header Auth Slot
+        const authSlot = document.getElementById("userHeaderSlot");
+        if (STATE.user) {
+          authSlot.innerHTML = `
+          <div class="flex items-center gap-2 bg-slate-50 border border-slate-200 px-3 py-1.5 rounded-xl mr-2">
+            <img src="${STATE.user.avatar}" alt="${STATE.user.name}" class="w-6 h-6 rounded-full object-cover">
+            <span class="text-xs font-bold text-slate-800 hidden sm:inline">${STATE.user.name.split(" ")[0]}</span>
+            <button onclick="handleLogout()" class="text-xs text-slate-400 hover:text-rose-600 ml-1 font-semibold" title="Log Out">
+              <i data-lucide="log-out" class="w-3.5 h-3.5"></i>
+            </button>
+          </div>
+        `;
+        } else {
+          authSlot.innerHTML = `
+          <button onclick="openAuthModal('signin')" class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold transition shadow-sm mr-2">
+            <i data-lucide="log-in" class="w-3.5 h-3.5"></i>
+            <span>Log In</span>
+          </button>
+        `;
+        }
+
+        // Update Badges & Counters
+        const taskBadge = document.getElementById("dockTaskBadge");
+        if (taskBadge) taskBadge.innerText = STATE.tasks.length;
+        const queueHeader = document.getElementById("queueHeader");
+        if (queueHeader)
+          queueHeader.innerText = `Study Queue (${STATE.tasks.length} items)`;
+
+        const hardCount = STATE.tasks.filter(
+          (t) => t.type === "hard" && !t.completed,
+        ).length;
+        const mediumCount = STATE.tasks.filter(
+          (t) => t.type === "medium" && !t.completed,
+        ).length;
+        const completedCount = STATE.tasks.filter((t) => t.completed).length;
+        const deferredCount = schedule.timeline.filter(
+          (item) => item.isOverTime,
+        ).length;
+
+        document.getElementById("metricHardCount").innerText = hardCount;
+        document.getElementById("metricMediumCount").innerText = mediumCount;
+        document.getElementById("metricCompletedCount").innerText =
+          completedCount;
+        document.getElementById("metricDeferredCount").innerText =
+          deferredCount;
+
+        // Update Study Window displays
+        const totalHrs = (Math.round((schedule.budget / 60) * 10) / 10).toFixed(
+          1,
+        );
+        document.getElementById("windowTotalHoursBadge").innerText =
+          `${totalHrs} Total Hour`;
+        document.getElementById("hubWindowDisplayStart").innerText =
+          schedule.startFormatted;
+        document.getElementById("hubWindowDisplayEnd").innerText =
+          schedule.endFormatted;
+        document.getElementById("homeWindowBadge").innerText =
+          `${schedule.startFormatted} - ${schedule.endFormatted}`;
+
+        // Update Home Streak & Buffer & Objectives
+        const streakBadge = document.getElementById("homeStreakBadge");
+        if (streakBadge) streakBadge.innerText = STATE.streak !== undefined ? STATE.streak : 0;
+
+        const totalBreakMins = schedule.timeline
+          .filter((item) => item.isBreak)
+          .reduce((acc, cur) => acc + cur.duration, 0);
+        const bufferLabel = document.getElementById("homeBufferLabel");
+        if (bufferLabel)
+          bufferLabel.innerText = `Buffer Time: ${totalBreakMins || 15} mins`;
+
+        const homeObjTitle = document.getElementById("homeObjectiveTitle");
+        const homeObjDesc = document.getElementById("homeObjectiveDesc");
+        const topActiveTask = STATE.tasks.find((t) => !t.completed);
+        if (homeObjTitle && homeObjDesc) {
+          if (topActiveTask) {
+            homeObjTitle.innerText = topActiveTask.title;
+            homeObjDesc.innerText = `${topActiveTask.subject} (${topActiveTask.durationMin} mins) scheduled with top priority while your energy is peak.`;
+          } else if (STATE.tasks.length > 0) {
+            homeObjTitle.innerText = "All Objectives Completed Tonight! 🎉";
+            homeObjDesc.innerText =
+              "You finished all scheduled topics. Enjoy your guilt-free relaxation and rest!";
+          } else {
+            homeObjTitle.innerText = "Set Tonight's Objectives";
+            homeObjDesc.innerText =
+              "Add coding, lab records, or revision tasks from your dashboard to auto-schedule.";
+          }
+        }
+
+        // Update Home Welcome
+        const homeHeading = document.getElementById("homeWelcomeHeading");
+        if (STATE.user) {
+          homeHeading.innerText = `Hey, ${STATE.user.name.split(" ")[0]}! Ready to study?`;
+        } else {
+          homeHeading.innerText = "Welcome! Set up your study time";
+        }
+
+        // Sync Pomodoro Timer display & buttons
+        updateTimerDisplay();
+        const timerBtnText = document.getElementById("timerBtnText");
+        const timerBtnIcon = document.getElementById("timerBtnIcon");
+        if (timerBtnText && timerBtnIcon) {
+          if (STATE.isTimerRunning) {
+            timerBtnText.innerText = "Pause Focus";
+            timerBtnIcon.setAttribute("data-lucide", "pause");
+          } else {
+            timerBtnText.innerText =
+              STATE.timerSeconds < 25 * 60 ? "Resume Focus" : "Start Focus";
+            timerBtnIcon.setAttribute("data-lucide", "play");
+          }
+        }
+
+        // Late offset status text
+        const lateStatus = document.getElementById("lateOffsetStatus");
+        const lateDot = document.getElementById("lateOffsetDot");
+        const resetLateBtn = document.getElementById("resetLateOffsetBtn");
+        const lateBtnText = document.getElementById("lateOffsetBtnText");
+
+        if (STATE.lateOffset > 0) {
+          lateStatus.innerText = `Schedule shifted forward by +${STATE.lateOffset} mins`;
+          lateDot.className =
+            "w-2.5 h-2.5 rounded-full bg-amber-500 animate-pulse";
+          resetLateBtn.classList.remove("hidden");
+          lateBtnText.innerText = `I'm Later (+${STATE.lateOffset + 20}m)`;
+        } else {
+          lateStatus.innerText = "Schedule is on track!";
+          lateDot.className =
+            "w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse";
+          resetLateBtn.classList.add("hidden");
+          lateBtnText.innerText = `I'm 20m Late (+20 min)`;
+        }
+
+        // Render Home Task Preview
+        const homePreview = document.getElementById("homeTaskListPreview");
+        if (homePreview) {
+          if (STATE.tasks.length === 0) {
+            homePreview.innerHTML = `
+            <div class="py-8 text-center text-slate-400 text-xs">
+              No tasks scheduled tonight. Add one in the Dashboard tab!
+            </div>
+          `;
+          } else {
+            homePreview.innerHTML = STATE.tasks
+              .slice(0, 3)
+              .map(
+                (task) => `
+            <div class="py-3 flex items-center justify-between gap-3">
+              <div onclick="toggleTaskDone('${task.id}')" class="flex items-center gap-3 cursor-pointer flex-1">
+                <div class="w-5 h-5 rounded-md border flex items-center justify-center transition ${task.completed ? "bg-emerald-600 border-emerald-600 text-white" : "border-slate-300 bg-white hover:border-indigo-500"}">
+                  ${task.completed ? '<i data-lucide="check" class="w-3.5 h-3.5 stroke-[3]"></i>' : ""}
+                </div>
+                <div>
+                  <p class="text-xs font-bold ${task.completed ? "line-through text-slate-400" : "text-slate-900"}">${task.title}</p>
+                  <p class="text-[11px] text-slate-500">${task.subject} • ${task.durationMin} mins</p>
+                </div>
+              </div>
+              <span class="text-[11px] font-semibold px-2.5 py-1 rounded-full ${task.type === "hard" ? "bg-indigo-50 text-indigo-700" : task.type === "medium" ? "bg-amber-50 text-amber-700" : "bg-emerald-50 text-emerald-700"}">
+                ${task.type === "hard" ? "⚡ Coding / Math" : task.type === "medium" ? "✍️ Written Work" : "📖 Quick Review"}
+              </span>
+            </div>
+          `,
+              )
+              .join("");
+          }
+        }
+
+        // Render Hub Task Queue List
+        const taskQueue = document.getElementById("taskQueueList");
+        if (taskQueue) {
+          if (STATE.tasks.length === 0) {
+            taskQueue.innerHTML = `
+            <div class="p-8 text-center bg-slate-50 border border-dashed border-slate-200 rounded-2xl text-slate-400 text-xs">
+              Your study queue is empty! Add a task above or click "AI Auto-Extract".
+            </div>
+          `;
+          } else {
+            taskQueue.innerHTML = STATE.tasks
+              .map((task) => {
+                const isHard = task.type === "hard";
+                const isMed = task.type === "medium";
+                return `
+              <div class="p-4 rounded-2xl border transition-all flex items-center justify-between gap-3 ${task.completed ? "bg-slate-50/80 border-slate-200 opacity-60" : "bg-white border-slate-200/90 hover:border-slate-300 shadow-sm"}">
+                <div onclick="toggleTaskDone('${task.id}')" class="flex-1 cursor-pointer flex items-center gap-3.5">
+                  <div class="w-6 h-6 rounded-lg border flex items-center justify-center transition shrink-0 ${task.completed ? "bg-emerald-600 border-emerald-600 text-white" : "border-slate-300 hover:border-indigo-500 bg-white"}">
+                    ${task.completed ? '<i data-lucide="check" class="w-4 h-4 stroke-[3]"></i>' : ""}
+                  </div>
+                  <div>
+                    <h4 class="text-xs font-bold ${task.completed ? "line-through text-slate-400" : "text-slate-900"}">${task.title}</h4>
+                    <div class="flex items-center gap-2 text-[11px] text-slate-500 mt-0.5">
+                      <span class="font-semibold text-slate-700">${task.subject}</span>
+                      <span>•</span>
+                      <span>${task.durationMin} mins</span>
+                      <span>•</span>
+                      <span class="${isHard ? "text-indigo-600 font-bold" : isMed ? "text-amber-600 font-bold" : "text-emerald-600 font-bold"}">
+                        ${isHard ? "⚡ Hard" : isMed ? "✍️ Written" : "📖 Revision"}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+                <div class="flex items-center gap-2 shrink-0">
+                  <button onclick="handleBreakdownTask('${task.id}')" class="px-2.5 py-1.5 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 text-xs font-semibold transition flex items-center gap-1" title="Break into small steps">
+                    <i data-lucide="sparkles" class="w-3.5 h-3.5 text-indigo-600"></i>
+                    <span>Break Down</span>
+                  </button>
+                  <button onclick="deleteTask('${task.id}')" class="p-1.5 text-slate-400 hover:text-rose-500 transition" title="Delete">
+                    <i data-lucide="trash-2" class="w-4 h-4"></i>
+                  </button>
+                </div>
+              </div>
+            `;
+              })
+              .join("");
+          }
+        }
+
+        // Render Days Strip in Timeline
+        const daysStrip = document.getElementById("weekDaysStrip");
+        if (daysStrip) {
+          daysStrip.innerHTML = STATE.weekDays
+            .map((d, idx) => {
+              const isSelected = idx === STATE.selectedDayIndex;
+              return `
+            <button onclick="selectDay(${idx})" class="w-9 py-1.5 rounded-xl text-center transition ${isSelected ? "bg-indigo-600 text-white font-bold shadow-md shadow-indigo-600/20" : "text-slate-600 hover:bg-slate-100 bg-slate-50"}">
+              <span class="text-[9px] block uppercase opacity-80">${d.day}</span>
+              <span class="text-xs font-extrabold block">${d.date}</span>
+            </button>
+          `;
+            })
+            .join("");
+        }
+
+        // Render Timeline Slots
+        const timelineBox = document.getElementById("timelineSlotsContainer");
+        if (timelineBox) {
+          if (schedule.timeline.length === 0) {
+            timelineBox.innerHTML = `
+            <div class="p-8 text-center bg-white border border-dashed border-slate-200 rounded-2xl text-slate-400 text-xs">
+              No timeline items yet. Add tasks from the Dashboard to see your schedule.
+            </div>
+          `;
+          } else {
+            timelineBox.innerHTML = schedule.timeline
+              .map((item) => {
+                if (item.isBreak) {
+                  return `
+                <div class="flex items-center gap-4 py-1">
+                  <div class="w-16 text-right text-xs font-bold text-slate-400 shrink-0">${item.start}</div>
+                  <div class="flex-1 p-3.5 rounded-2xl bg-emerald-50/80 border border-dashed border-emerald-300 flex items-center justify-between">
+                    <div class="flex items-center gap-3">
+                      <div class="w-8 h-8 rounded-xl bg-emerald-100 text-emerald-800 flex items-center justify-center shrink-0">
+                        <i data-lucide="coffee" class="w-4 h-4"></i>
+                      </div>
+                      <div>
+                        <p class="text-xs font-bold text-emerald-950">${item.title}</p>
+                        <p class="text-[11px] text-emerald-800">${item.subtitle}</p>
+                      </div>
+                    </div>
+                    <span class="text-[11px] font-bold text-emerald-800 bg-white border border-emerald-200 px-2.5 py-0.5 rounded-md">15 Min Break</span>
+                  </div>
+                </div>
+              `;
+                }
+
+                return `
+              <div class="flex items-start gap-4">
+                <div class="w-16 pt-3 text-right text-xs font-bold text-slate-500 shrink-0">${item.start}</div>
+                <div class="flex-1 p-4 rounded-2xl border transition-all ${item.isOverTime ? "bg-amber-50/70 border-amber-300" : item.completed ? "bg-slate-50 border-slate-200 opacity-60" : "bg-white border-slate-200/90 shadow-sm"}">
+                  <div class="flex items-start justify-between gap-3">
+                    <div>
+                      <h4 class="text-xs font-bold ${item.completed ? "line-through text-slate-400" : "text-slate-900"}">${item.title}</h4>
+                      <p class="text-[11px] text-slate-500 mt-0.5">${item.start} – ${item.end} • ${item.duration} mins</p>
+                    </div>
+                    <button onclick="toggleTaskDone('${item.taskId}')" class="w-6 h-6 rounded-lg border flex items-center justify-center transition shrink-0 ${item.completed ? "bg-emerald-600 border-emerald-600 text-white" : "border-slate-300 hover:border-indigo-500 bg-white"}">
+                      ${item.completed ? '<i data-lucide="check" class="w-3.5 h-3.5 stroke-[3]"></i>' : ""}
+                    </button>
+                  </div>
+                  <div class="mt-3 pt-2.5 border-t border-slate-100 flex items-center justify-between">
+                    <span class="text-[10px] font-bold px-2 py-0.5 rounded-md ${item.isOverTime ? "bg-amber-100 text-amber-800 border border-amber-200" : item.type === "hard" ? "bg-indigo-50 text-indigo-700 border border-indigo-200" : "bg-slate-100 text-slate-700 border border-slate-200"}">
+                      ${item.tag}
+                    </span>
+                    <span class="text-[11px] text-slate-500 font-medium">${item.subject}</span>
+                  </div>
+                </div>
+              </div>
+            `;
+              })
+              .join("");
+          }
+        }
+
+        // Update Dynamic Velocity / Performance Metrics
+        updatePerformanceMetrics();
+
+        // Render Profile Tab
+        renderProfileTab(schedule);
+
+        // Re-init Lucide Icons
+        if (window.lucide && typeof window.lucide.createIcons === "function") {
+          window.lucide.createIcons();
+        }
+      }
+
+      function updatePerformanceMetrics() {
+        const totalCount = STATE.tasks.length;
+        const doneCount = STATE.tasks.filter((t) => t.completed).length;
+        const totalWeeklyTarget = 28;
+        const effectiveDone = STATE.user ? 20 + doneCount : 0;
+        const pct = STATE.user
+          ? Math.min(100, Math.round((effectiveDone / totalWeeklyTarget) * 100))
+          : 0;
+
+        const doneEl = document.getElementById("perfTasksCompletedText");
+        const badgeEl = document.getElementById("perfTasksPercentageBadge");
+        const barEl = document.getElementById("perfTasksCompletedBar");
+
+        if (doneEl)
+          doneEl.innerText = `${effectiveDone} / ${totalWeeklyTarget}`;
+        if (badgeEl) badgeEl.innerText = `${pct}% Done`;
+        if (barEl) barEl.style.width = `${pct}%`;
+
+        // Study Type Distribution
+        const hpText = document.getElementById("perfHardPercentText");
+        const hpBar = document.getElementById("perfHardPercentBar");
+        const mpText = document.getElementById("perfMediumPercentText");
+        const mpBar = document.getElementById("perfMediumPercentBar");
+        const lpText = document.getElementById("perfLightPercentText");
+        const lpBar = document.getElementById("perfLightPercentBar");
+
+        if (totalCount > 0) {
+          const hard = STATE.tasks.filter((t) => t.type === "hard").length;
+          const med = STATE.tasks.filter((t) => t.type === "medium").length;
+          const light = STATE.tasks.filter((t) => t.type === "light").length;
+
+          const hardPct = Math.round((hard / totalCount) * 100);
+          const medPct = Math.round((med / totalCount) * 100);
+          const lightPct = 100 - hardPct - medPct;
+
+          if (hpText) hpText.innerText = `${hardPct}%`;
+          if (hpBar) hpBar.style.width = `${hardPct}%`;
+          if (mpText) mpText.innerText = `${medPct}%`;
+          if (mpBar) mpBar.style.width = `${medPct}%`;
+          if (lpText) lpText.innerText = `${lightPct}%`;
+          if (lpBar) lpBar.style.width = `${lightPct}%`;
+        } else {
+          if (hpText) hpText.innerText = "0%";
+          if (hpBar) hpBar.style.width = "0%";
+          if (mpText) mpText.innerText = "0%";
+          if (mpBar) mpBar.style.width = "0%";
+          if (lpText) lpText.innerText = "0%";
+          if (lpBar) lpBar.style.width = "0%";
+        }
+      }
+
+      function renderProfileTab(schedule) {
+        const actionSlot = document.getElementById("profileAuthActionSlot");
+        const content = document.getElementById("profileMainContent");
+        if (!actionSlot || !content) return;
+
+        if (STATE.user) {
+          actionSlot.innerHTML = `
+          <button onclick="handleLogout()" class="text-xs font-bold px-3.5 py-2 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 transition flex items-center gap-1.5">
+            <i data-lucide="log-out" class="w-3.5 h-3.5"></i>
+            <span>Log Out</span>
+          </button>
+        `;
+
+          content.innerHTML = `
+          <div class="p-6 rounded-2xl bg-white border border-slate-200/80 shadow-sm space-y-5">
+            <div class="flex items-center gap-4 p-4 rounded-xl bg-slate-50 border border-slate-200">
+              <img src="${STATE.user.avatar}" alt="${STATE.user.name}" class="w-14 h-14 rounded-2xl object-cover border-2 border-white shadow-sm">
+              <div>
+                <h3 class="text-sm font-bold text-slate-900">${STATE.user.name}</h3>
+                <p class="text-xs text-slate-500">${STATE.user.email}</p>
+                <p class="text-[11px] font-semibold text-indigo-600 mt-0.5">Roll No: ${STATE.user.collegeId}</p>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label class="text-xs font-bold text-slate-700 block mb-1.5">Full Name</label>
+                <input type="text" id="profNameInput" value="${STATE.user.name}" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 text-xs focus:ring-2 focus:ring-indigo-500 focus:bg-white">
+              </div>
+              <div>
+                <label class="text-xs font-bold text-slate-700 block mb-1.5">College Roll No</label>
+                <input type="text" id="profCollegeIdInput" value="${STATE.user.collegeId}" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 text-xs focus:ring-2 focus:ring-indigo-500 focus:bg-white">
+              </div>
+            </div>
+
+            <!-- Degree Track -->
+            <div>
+              <label class="text-xs font-bold text-slate-700 block mb-2">Your Course / Degree Track</label>
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                ${STUDY_TRACKS.map((tr) => {
+                  const isSel = STATE.user.track === tr.id;
+                  return `
+                    <div onclick="selectTrack('${tr.id}')" class="p-3.5 rounded-xl border cursor-pointer transition ${isSel ? "bg-indigo-50/80 border-indigo-500 ring-1 ring-indigo-500 text-indigo-950" : "bg-white border-slate-200 hover:border-slate-300 text-slate-700"}">
+                      <div class="flex items-center justify-between">
+                        <span class="text-xs font-bold">${tr.title}</span>
+                        ${isSel ? '<i data-lucide="check-circle-2" class="w-4 h-4 text-indigo-600"></i>' : ""}
+                      </div>
+                      <p class="text-[11px] text-slate-500 mt-1">${tr.sub}</p>
+                    </div>
+                  `;
+                }).join("")}
+              </div>
+            </div>
+
+            <div>
+              <label class="text-xs font-bold text-slate-700 block mb-1.5">Target Semester Goal</label>
+              <input type="text" id="profGoalInput" value="${STATE.user.goal}" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 text-xs focus:ring-2 focus:ring-indigo-500 focus:bg-white" placeholder="e.g. Score 9.0+ SGPA & Build 3 Coding Projects">
+            </div>
+
+            <div class="pt-3 border-t border-slate-100 flex flex-wrap items-center justify-between gap-3">
+              <button onclick="saveProfile()" class="px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs uppercase tracking-wider shadow-md shadow-indigo-600/20 transition flex items-center gap-2">
+                <i data-lucide="save" class="w-4 h-4"></i>
+                <span>Save Profile Changes</span>
+              </button>
+              <button onclick="resetDemoData()" class="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-xs font-bold text-slate-600 transition">
+                Reset Demo Data
+              </button>
+            </div>
+          </div>
+        `;
+        } else {
+          actionSlot.innerHTML = `
+          <button onclick="openAuthModal('signin')" class="text-xs font-bold px-3.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white shadow-sm transition flex items-center gap-1.5">
+            <i data-lucide="log-in" class="w-3.5 h-3.5"></i>
+            <span>Log In</span>
+          </button>
+        `;
+
+          content.innerHTML = `
+          <div class="p-8 rounded-2xl bg-white border border-slate-200/80 shadow-sm text-center space-y-4">
+            <div class="w-16 h-16 rounded-2xl bg-slate-100 flex items-center justify-center text-slate-400 mx-auto">
+              <i data-lucide="user-x" class="w-8 h-8"></i>
+            </div>
+            <div>
+              <h3 class="text-base font-bold text-slate-900">You are browsing as Guest</h3>
+              <p class="text-xs text-slate-500 max-w-sm mx-auto mt-1">Sign in to save your personal schedule, track your semester SGPA progress, and sync across devices.</p>
+            </div>
+            <button onclick="openAuthModal('signin')" class="px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs shadow-md shadow-indigo-600/20 transition">
+              Sign In / Create Account
+            </button>
+          </div>
+        `;
+        }
+      }
+
+      // Modal close on Backdrop or Escape key
+      window.addEventListener("keydown", (e) => {
+        if (e.key === "Escape") {
+          closeAuthModal();
+          closeBreakdownModal();
+        }
+      });
+
+      document.getElementById("authModal").addEventListener("click", (e) => {
+        if (e.target.id === "authModal") closeAuthModal();
+      });
+
+      document
+        .getElementById("breakdownModal")
+        .addEventListener("click", (e) => {
+          if (e.target.id === "breakdownModal") closeBreakdownModal();
+        });
+
+      // Update Phone Clock every 30s
+      function updatePhoneClock() {
+        const now = new Date();
+        const clock = document.getElementById("phoneClock");
+        if (clock) {
+          const h = now.getHours();
+          const m = now.getMinutes();
+          clock.innerText = `${h < 10 ? "0" : ""}${h}:${m < 10 ? "0" : ""}${m}`;
+        }
+      }
+
+      // Initial Execution on Page Load
+      document.addEventListener("DOMContentLoaded", () => {
+        if (document.getElementById("inputStartTime")) {
+          document.getElementById("inputStartTime").value =
+            STATE.studyWindow.start;
+        }
+        if (document.getElementById("inputEndTime")) {
+          document.getElementById("inputEndTime").value = STATE.studyWindow.end;
+        }
+
+        updatePhoneClock();
+        setInterval(updatePhoneClock, 30000);
+
+        probeBackend();
+        setTab(STATE.activeTab || "hub");
+      });
+    </script>
+  </body>
+</html>

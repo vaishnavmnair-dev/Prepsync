@@ -1,0 +1,21 @@
+services:
+  # Free FastAPI Backend Service
+  - type: web
+    name: adaptivestudy-backend
+    env: python
+    plan: free
+    rootDir: backend
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.8
+
+  # Free Static Frontend Service
+  - type: web
+    name: adaptivestudy-frontend
+    env: static
+    plan: free
+    rootDir: Frontend
+    staticPublishPath: .
+
